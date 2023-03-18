@@ -1,0 +1,17 @@
+# Generic node stuff.
+node_modules
+# Dotenv file.
+.env
+# Conversation history and logs.
+convos
+logs
+# Dashboard settings file
+dash.json
+# Project-specific configuration file.
+config.js
+# Avatars should probably not be committed.
+public/chatify/assets/avatars/builtin/**
+public/chatify/assets/avatars/community/**
+!public/chatify/assets/avatars/builtin/helper.svg
+!public/chatify/assets/avatars/builtin/nonsense.svg
+!public/chatify/assets/avatars/builtin/custom.svg

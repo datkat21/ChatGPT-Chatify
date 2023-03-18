@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chatify Dashboard</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 1vmax 3vmax;
+        background-color: var(--background-default);
+        color: var(--text-color);
+        font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont,
+          Inter, Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans",
+          "Helvetica Neue", sans-serif;
+        height: 100%;
+        width: 100%;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      :root,
+      :root[data-theme="dark"] {
+        --accent: #124b31;
+        --meter: #4e9876;
+        --input-background-color: #262626;
+        --input-border: #fff3;
+        --button-background-color: #124b31;
+        --button-neutral-color: #50505041;
+        --button-transparent-color: #50505000;
+        --button-danger-color: #4b1212;
+        --text-color: #ffffff;
+        --background-default: #1f1f1f;
+        --background-dim: #1c1c1c;
+        --background-dimmer: #151515;
+        --transparent-border: #fff3;
+        --background-light: #232323;
+        --tab-selector: #252525;
+        --tab-selected: #4d4d4d;
+        --transparent-border-alt: #fff1;
+        --text-color-accent: #acd3a6;
+        --separator: #666;
+      }
+
+      a {
+        color: #fff;
+      }
+
+      a:visited {
+        color: #999;
+      }
+
+      table {
+        font-family: Arial, Helvetica, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+        margin-top: 20px;
+      }
+
+      thead {
+        background-color: #262626;
+      }
+
+      tr.user {
+        background-color: var(--background-default);
+      }
+      tr.gpt {
+        background-color: var(--background-dim);
+      }
+
+      th,
+      td {
+        text-align: left;
+        padding: 8px;
+      }
+
+      th {
+        font-weight: bold;
+      }
+    </style>
+    <script>
+      window.addEventListener("load", () => {
+        const pages = {
+          home: {
+            content: /*html*/ `
+              <h1>Dashboard</h1>
+              <p>Welcome to dashboard</p>
+
+              <a href="#logs">View logs</a> &bull; <a href="#convos">View conversations</a>
+            `,
+            onload: () => {
+              // Check api stuff
+            },
+          },
+          logs: {
+            content: /*html*/ `
+              <h1>Logs</h1>
+              <p>Log viewer</p>
+
+              <a href="#">Back</a><br><br>
+            `,
+            onload: () => {
+              // Check api stuff
+              fetch("/api/dash/logs")
+                .then((response) => {
+                  if (!response.ok) {
+                    throw new Error("Network response not OK");
+                  }
+                  return response.json();
+                })
+                .then((jsonData) => {
+                  jsonData.reverse();
+                  jsonData.forEach((log) => {
+                    document.body.insertAdjacentHTML(
+                      "beforeend",
+                      `<a href="#logView:${log}">${log}</a> `
+                    );
+                  });
+                })
+                .catch((error) => {
+                  console.log(`Error fetching logs: ${error}`);
+                });
+            },
+          },
+          logView: {
+            content: "<h1>Log View: $</h1> <a href='#logs'>Back</a>",
+            onload: (param) => {
+              fetch(`/api/dash/logs/${param}`)
+                .then((response) => {
+                  if (!response.ok) {
+                    throw new Error("Network response not OK");
+                  }
+                  return response.text();
+                })
+                .then((data) => {
+                  document.body.insertAdjacentHTML(
+                    "beforeend",
+                    `<pre>${data}</pre>`
+                  );
+                })
+                .catch((error) => {
+                  console.log(`Error fetching log: ${error}`);
+                });
+            },
+          },
+          convos: {
+            content: /*html*/ `
+              <h1>Conversations</h1>
+              <p>Conversation viewer</p>
+
+              <a href="#">Back</a><br><br>
+            `,
+            onload: () => {
+              // Check api stuff
+              fetch("/api/dash/convos")
+                .then((response) => {
+                  if (!response.ok) {
+                    throw new Error("Network response not OK");
+                  }
+                  return response.json();
+                })
+                .then((jsonData) => {
+                  jsonData.reverse();
+                  jsonData.forEach((log) => {
+                    document.body.insertAdjacentHTML(
+                      "beforeend",
+                      `<a href="#convoView:${log}">${log}</a> `
+                    );
+                  });
+                })
+                .catch((error) => {
+                  console.log(`Error fetching logs: ${error}`);
+                });
+            },
+          },
+          convoView: {
+            content: "<h1>Conversation view: $</h1> <a href='#convos'>Back</a>",
+            onload: (param) => {
+              fetch(`/api/dash/convos/${param}`)
+                .then((response) => {
+                  if (!response.ok) {
+                    throw new Error("Network response not OK");
+                  }
+                  return response.json();
+                })
+                .then((resp) => {
+                  const jsonData = resp.data;
+                  console.log(resp);
+
+                  if (jsonData.customSettings && jsonData.customSettings.system) {
+                    document.body.insertAdjacentHTML(
+                      "beforeend",
+                      '<p><b>A custom prompt was used.</b><br><p>Custom prompt:<br><span class="custom">System...</span> <span class="temp">Temp..</span>'
+                    );
+                    document.querySelector(".custom").textContent =
+                      jsonData.customSettings.system;
+                    document.querySelector(".temp").textContent =
+                      jsonData.customSettings.temp;
+                  }
+
+                  const tableBody = document.createElement("tbody");
+                  const tableHead = document.createElement("thead");
+
+                  // add table header
+                  const headerRow = tableHead.insertRow(-1);
+                  const userHeader = headerRow.insertCell(-1);
+                  const userPromptHeader = headerRow.insertCell(-1);
+                  const botPromptHeader = headerRow.insertCell(-1);
+                  userHeader.textContent = "User";
+                  userPromptHeader.textContent = "Message";
+                  botPromptHeader.textContent = "Type";
+
+                  // add rows to table
+                  jsonData.context.forEach((interaction) => {
+                    const row = tableBody.insertRow(-1);
+                    const nameCell = row.insertCell(-1);
+                    const contentCell = row.insertCell(-1);
+                    const promptCell = row.insertCell(-1);
+                    nameCell.textContent = interaction.name || interaction.role;
+                    contentCell.textContent = interaction.content;
+                    promptCell.textContent = interaction.type
+                      ? interaction.type
+                      : "-";
+                    row.classList.add(
+                      interaction.role === "assistant" ? "gpt" : "user"
+                    );
+                  });
+
+                  const row = tableBody.insertRow(-1);
+                  const nameCell = row.insertCell(-1);
+                  const contentCell = row.insertCell(-1);
+                  const promptCell = row.insertCell(-1);
+                  nameCell.textContent = "assistant";
+                  contentCell.textContent = resp.result;
+                  promptCell.textContent = resp.botPrompt;
+                  row.classList.add("gpt");
+
+                  // add table to document
+                  const table = document.createElement("table");
+                  table.appendChild(tableHead);
+                  table.appendChild(tableBody);
+                  document.body.appendChild(table);
+                })
+                .catch((error) => {
+                  console.log(`Error fetching log: ${error}`);
+                });
+            },
+          },
+        };
+
+        const changePage = () => {
+          if (location.hash.substring(1) === "") location.hash = "#home";
+          const [route, ...param] = location.hash.substring(1).split(":");
+          if (pages.hasOwnProperty(route)) {
+            const content = param
+              ? pages[route].content.replace(/\$/g, param)
+              : pages[route].content;
+            document.body.innerHTML = content;
+            pages[route].onload?.(param);
+          }
+        };
+
+        window.addEventListener("hashchange", changePage);
+        changePage();
+      });
+    </script>
+  </head>
+  <body>
+    <h1>Hello</h1>
+  </body>
+</html>
