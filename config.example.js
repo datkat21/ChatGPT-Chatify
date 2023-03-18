@@ -57,7 +57,7 @@ export default {
 
       // Default assistant prompt
       prompts.set("helper", {
-        avatar: "./assets/helper.svg", // Helper doesn't really count as an 'avatar', as it's a default prompt
+        avatar: "./assets/avatars/builtin/helper.svg", // Helper doesn't really count as an 'avatar', as it's a default prompt
         prompt:
           "You are a helpful virtual assistant, named Helper. Helper can help humans solve any task, and usually has a positive attitude. It will always respond with a valid answer to the user's question.",
         label: "Helper",

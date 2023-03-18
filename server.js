@@ -312,9 +312,6 @@ io.on("connection", (sock) => {
           sock.emit("err", m);
         } else if (m.done && m.done === true) {
           sock.emit("done");
-          for (let [key, value] of requestsMap.entries()) {
-            console.log(`Key: ${key}, Value: ${value}`);
-          }
         }
       },
       (m) => {
