@@ -318,8 +318,8 @@ export function getIp(req) {
   return ip;
 }
 export function getSocketioIp(socket) {
-  return (
-    socket.handshake.headers["x-forwarded-for"] || socket.handshake.address
+  return convertIp(
+    socket.request.headers["x-forwarded-for"] || socket.handshake.address
   );
 }
 
@@ -332,36 +332,4 @@ export function convertIp(ip) {
   )
     ip = "local";
   return ip;
-}
-
-export function rateLimit(req) {
-  let ip = req;
-  if (typeof req !== "string") ip = getIp(req);
-
-  // Get the number of requests made by this IP address in the last hour
-  const numRequests = requestsMap.get(ip) || 0;
-
-  let plan = { limit: MAX_REQS, label: "free" };
-  if (PlansLookup.has(ip)) plan = PlansLookup.get(ip);
-
-  // If the number of requests is greater than the maximum allowed, return an error
-  if (numRequests >= plan.limit) {
-    return true;
-  }
-
-  // Increment the number of requests made by this IP address and store it in the Map
-  requestsMap.set(ip, numRequests + 1);
-
-  if (numRequests === 0) {
-    // Set the expiry time for this IP address's entry in the Map to 1 hour from now
-    const expiryTime = 60 * 60 * 1000;
-    const expiryTimeDate = Date.now() + expiryTime;
-    requestsMap.set(ip + "e", expiryTimeDate);
-
-    setTimeout(() => {
-      requestsMap.delete(ip);
-    }, expiryTime);
-
-    return false;
-  }
 }

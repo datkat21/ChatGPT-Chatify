@@ -5,27 +5,14 @@ import { createServer } from "http";
 config();
 import { fileURLToPath } from "url";
 import path from "path";
-import fs, {
-  exists,
-  existsSync,
-  mkdirSync,
-  readdirSync,
-  readFileSync,
-} from "fs";
+import fs, { existsSync, mkdirSync, readdirSync } from "fs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.resolve(path.dirname(__filename));
 
 // Local imports to help set up the server
 import * as Config from "./config.js";
-import {
-  convertIp,
-  generateResponse,
-  getIp,
-  getSocketioIp,
-  log,
-  rateLimit,
-} from "./api.js";
+import { generateResponse, getIp, getSocketioIp, log } from "./api.js";
 
 // Create the directories to store logs and conversation history
 if (!existsSync(__dirname + "/logs")) {
@@ -33,6 +20,38 @@ if (!existsSync(__dirname + "/logs")) {
 }
 if (!existsSync(__dirname + "/convos")) {
   mkdirSync(__dirname + "/convos");
+}
+
+function rateLimit(req) {
+  let ip = req;
+  if (typeof req !== "string") ip = getIp(req);
+
+  // Get the number of requests made by this IP address in the last hour
+  const numRequests = requestsMap.get(ip) || 0;
+
+  let plan = { limit: MAX_REQS, label: "free" };
+  if (PlansLookup.has(ip)) plan = PlansLookup.get(ip);
+
+  // If the number of requests is greater than the maximum allowed, return an error
+  if (numRequests >= plan.limit) {
+    return true;
+  }
+
+  // Increment the number of requests made by this IP address and store it in the Map
+  requestsMap.set(ip, numRequests + 1);
+
+  if (numRequests === 0) {
+    // Set the expiry time for this IP address's entry in the Map to 1 hour from now
+    const expiryTime = 60 * 60 * 1000;
+    const expiryTimeDate = Date.now() + expiryTime;
+    requestsMap.set(ip + "e", expiryTimeDate);
+
+    setTimeout(() => {
+      requestsMap.delete(ip);
+    }, expiryTime);
+
+    return false;
+  }
 }
 
 const app = express();
@@ -124,6 +143,7 @@ app.get("/api/usage", (req, res) => {
     expires: new Date(requestsMap.get(ip + "e")).toJSON(),
     plan: plan.label,
   });
+  console.log("ip", ip);
 });
 
 const ver = "v0.4.0";
@@ -292,6 +312,9 @@ io.on("connection", (sock) => {
           sock.emit("err", m);
         } else if (m.done && m.done === true) {
           sock.emit("done");
+          for (let [key, value] of requestsMap.entries()) {
+            console.log(`Key: ${key}, Value: ${value}`);
+          }
         }
       },
       (m) => {
