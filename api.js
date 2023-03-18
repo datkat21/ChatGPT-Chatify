@@ -270,7 +270,7 @@ export const generateResponse = async (
 
         callbackData({ error: false, done: true });
       } else {
-        ws.send({ error: true, errorMessage: "Bad Request" });
+        callbackError({ error: true, errorMessage: "Bad Request" });
       }
     } catch (e) {
       callbackData({
