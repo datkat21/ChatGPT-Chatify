@@ -70,7 +70,7 @@ try {
   log("[ERROR]", e);
 }
 
-log('[Debug] Starting server...');
+log("[Debug] Starting server...");
 
 // global the variables
 globalThis.requestsMap = requestsMap;
@@ -166,6 +166,35 @@ const validateIP = (req, res, next) => {
 
 // Serve /dash only to allowed IPs
 app.use("/dash", validateIP, express.static("public/dashboard"));
+
+app.post("/api/generate", (req, res) => {
+  if (rateLimit(getIp(req)) === true) {
+    return res
+      .status(429)
+      .json({ error: true, errorMessage: "Too Many Requests", errorCode: 249 });
+  }
+
+  let result = "";
+
+  generateResponse(
+    JSON.stringify(req.body),
+    (m) => {
+      if (m.data !== undefined) {
+        result += m.data;
+      } else if (m.error && m.error === true) {
+        res.status(500).json(m);
+      } else if (m.done && m.done === true) {
+        res.json(Object.assign({}, m, { result }));
+      }
+    },
+    (m) => {
+      res.status(500).json({ error: true, errorMessage: JSON.stringify(m) });
+      hasUserRequested = false;
+    },
+    true,
+    getIp(req)
+  );
+});
 
 app.get("/api/dash/logs", validateIP, (req, res) => {
   const { permissions } = req;
