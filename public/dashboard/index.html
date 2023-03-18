@@ -123,7 +123,10 @@
                 })
                 .catch((error) => {
                   console.log(`Error fetching logs: ${error}`);
-                  document.body.insertAdjacentHTML('beforeend', `Error fetching logs: ${error}`);
+                  document.body.insertAdjacentHTML(
+                    "beforeend",
+                    `Error fetching logs: ${error}`
+                  );
                 });
             },
           },
@@ -145,7 +148,10 @@
                 })
                 .catch((error) => {
                   console.log(`Error fetching log: ${error}`);
-                  document.body.insertAdjacentHTML('beforeend', `Error fetching log: ${error}`);
+                  document.body.insertAdjacentHTML(
+                    "beforeend",
+                    `Error fetching log: ${error}`
+                  );
                 });
             },
           },
@@ -176,7 +182,10 @@
                 })
                 .catch((error) => {
                   console.log(`Error fetching convos: ${error}`);
-                  document.body.insertAdjacentHTML('beforeend', `Error fetching convos: ${error}`);
+                  document.body.insertAdjacentHTML(
+                    "beforeend",
+                    `Error fetching convos: ${error}`
+                  );
                 });
             },
           },
@@ -194,7 +203,10 @@
                   const jsonData = resp.data;
                   console.log(resp);
 
-                  if (jsonData.customSettings && jsonData.customSettings.system) {
+                  if (
+                    jsonData.customSettings &&
+                    jsonData.customSettings.system
+                  ) {
                     document.body.insertAdjacentHTML(
                       "beforeend",
                       '<p><b>A custom prompt was used.</b><br><p>Custom prompt:<br><span class="custom">System...</span> <span class="temp">Temp..</span>'
@@ -218,7 +230,7 @@
                   botPromptHeader.textContent = "Type";
 
                   // add rows to table
-                  jsonData.context.forEach((interaction) => {
+                  (resp.context ?? jsonData.context).forEach((interaction) => {
                     const row = tableBody.insertRow(-1);
                     const nameCell = row.insertCell(-1);
                     const contentCell = row.insertCell(-1);
@@ -250,7 +262,10 @@
                 })
                 .catch((error) => {
                   console.log(`Error fetching convo: ${error}`);
-                  document.body.insertAdjacentHTML('beforeend', `Error fetching convo: ${error}`);
+                  document.body.insertAdjacentHTML(
+                    "beforeend",
+                    `Error fetching convo: ${error}`
+                  );
                 });
             },
           },

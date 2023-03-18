@@ -260,6 +260,7 @@ export const generateResponse = async (
             entryString,
             ip,
             oldCtx,
+            context,
             user,
             userPrompt,
             botPrompt,
