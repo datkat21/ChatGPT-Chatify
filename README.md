@@ -1,6 +1,8 @@
 # Chatify AI
 
-Chatify is a simple web front-end and back-end for ChatGPT! **Requires OpenAI API key.**
+![](assets/ss.png)
+
+Chatify is a simple web front-end and back-end for ChatGPT! **Requires OpenAI API key, view instructions to set up.**
 
 ## Setup steps
 
@@ -13,7 +15,7 @@ Chatify is a simple web front-end and back-end for ChatGPT! **Requires OpenAI AP
 
 - Real-time message streaming
 - API Rate limit (per IP address)
-- (TODO) Dashboard for viewing logs and conversation history
+- Dashboard for viewing logs and conversation history
 
 ## Configuration
 
