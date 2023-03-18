@@ -172,7 +172,7 @@ export const generateResponse = async (
 
         const user = limitString(data.user) || "User";
         const userPrompt = data.prompt;
-        const useUserName = data.useUserName ?? true;
+        const useUserName = data.useUserName ?? false;
         let query =
           useUserName === true ? `${user}: ${userPrompt}` : userPrompt;
         const botPrompt = data.botPrompt || "helper";

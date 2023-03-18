@@ -154,7 +154,7 @@ const ipToPermissionsMap = Config.default.options.dashboard.access.reduce(
 );
 
 const validateIP = (req, res, next) => {
-  const requestIP = convertIp(req.ip);
+  const requestIP = getIp(req);
   const permissions = ipToPermissionsMap[requestIP];
   if (permissions) {
     req.permissions = permissions;
