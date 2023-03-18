@@ -123,6 +123,7 @@
                 })
                 .catch((error) => {
                   console.log(`Error fetching logs: ${error}`);
+                  document.body.insertAdjacentHTML('beforeend', `Error fetching logs: ${error}`);
                 });
             },
           },
@@ -144,6 +145,7 @@
                 })
                 .catch((error) => {
                   console.log(`Error fetching log: ${error}`);
+                  document.body.insertAdjacentHTML('beforeend', `Error fetching log: ${error}`);
                 });
             },
           },
@@ -173,7 +175,8 @@
                   });
                 })
                 .catch((error) => {
-                  console.log(`Error fetching logs: ${error}`);
+                  console.log(`Error fetching convos: ${error}`);
+                  document.body.insertAdjacentHTML('beforeend', `Error fetching convos: ${error}`);
                 });
             },
           },
@@ -246,7 +249,8 @@
                   document.body.appendChild(table);
                 })
                 .catch((error) => {
-                  console.log(`Error fetching log: ${error}`);
+                  console.log(`Error fetching convo: ${error}`);
+                  document.body.insertAdjacentHTML('beforeend', `Error fetching convo: ${error}`);
                 });
             },
           },
