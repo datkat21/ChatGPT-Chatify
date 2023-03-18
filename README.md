@@ -21,6 +21,15 @@ Copy `config.example.js` to `config.js` if you haven't already. Follow any instr
 
 ### Configuring your API key
 
+Create a `.env` file, and fill it like this:
+
+```ini
+OPENAI_API_KEY=sk-...
+OPENAI_ORG=org-...
+```
+
+..where `OPENAI_API_KEY` can be found [here](https://platform.openai.com/account/api-keys), and `OPENAI_ORG` you can find [here](https://platform.openai.com/account/org-settings).
+
 ### Creating custom prompts
 
 There are 2 types of prompts that show up in the list: `Built-In` and `Community`.  
