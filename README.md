@@ -1,6 +1,6 @@
 # Chatify AI
 
-Chatify is a simple web front-end and back-end for ChatGPT! 
+Chatify is a simple web front-end and back-end for ChatGPT! **Requires OpenAI API key.**
 
 ## Setup steps
 
@@ -18,6 +18,8 @@ Chatify is a simple web front-end and back-end for ChatGPT!
 ## Configuration
 
 Copy `config.example.js` to `config.js` if you haven't already. Follow any instructions in the comments to set up your instance.
+
+**To add your API key, add a `.env` file, and set `OPENAI_API_KEY=sk-...` (found [here](https://platform.openai.com/account/api-keys))**
 
 ### Creating custom prompts
 
