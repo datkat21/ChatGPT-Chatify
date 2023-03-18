@@ -22,7 +22,7 @@ export default {
       },
       // . . . (copy if you want to add more)
     ],
-    // ** The Dashboard is currently not a thing yet. **
+    // The dashboard can be accessed at `/dash` to users who have access.
     dashboard: {
       // Allow the dashboard to even exist
       enabled: true,
