@@ -182,7 +182,7 @@ export const generateResponse = async (
   entryString,
   callbackData,
   callbackError,
-  callbackEarlyClose, // I want this to be a kind of reverse callback where the abort controller is called instead of how the others are.. Maybe use this callback to give a callback which can be used to trigger the AbortController!
+  callbackEarlyClose,
   stream = true,
   ip
 ) => {
