@@ -1,4 +1,5 @@
 window.addEventListener("load", async function () {
+  //#region Setup
   class Html {
     constructor(e) {
       this.elm = document.createElement(e || "div");
@@ -270,6 +271,7 @@ window.addEventListener("load", async function () {
       btn_modal.show();
     }
   }
+  //#endregion
 
   const ICONS = {
     trashCan:
@@ -278,6 +280,8 @@ window.addEventListener("load", async function () {
       '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>',
     checkMark:
       '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>',
+    stop: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>',
+    send: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>',
   };
 
   let apiUsage = {
@@ -298,24 +302,41 @@ window.addEventListener("load", async function () {
 
   await checkRequests();
 
-  const OPENAI_URL = "/api/generateStream";
-  // const OPENAI_URL_WS = `${location.protocol.replace("http", "ws")}//${
-  //   location.host
-  // }/api/generateStream`;
   const OPENAI_URL_WS = `${location.protocol.replace("http", "ws")}//${
     location.host
   }`;
   let messageHistory = [];
 
   const settingsContainer = new Html().class("config").appendTo("body");
-  const messagesWrapper = new Html().class("messages-wrapper");
+  const messagesWrapper = new Html().class("messages-wrapper").style({
+    display: "flex",
+    flexDirection: "row",
+    gap: "8px",
+    alignItems: "flex-end",
+  });
 
   const messagesContainer = new Html()
     .class("messages")
     .appendTo(messagesWrapper);
+
+  const inputAreaWrapper = new Html()
+    .classOn("row")
+    .classOn("py-0")
+    .classOn("align-end")
+    .appendTo(messagesWrapper);
+
   const inputArea = new Html("textarea")
-    .appendTo(messagesWrapper)
-    .attr({ type: "text", placeholder: "Message", rows: "1" });
+    .classOn("fg")
+    .attr({ type: "text", placeholder: "Message", rows: "1" })
+    .style({ flexGrow: "1" })
+    .appendTo(inputAreaWrapper);
+
+  const sendButton = new Html("button")
+    .html(ICONS.send)
+    .classOn("fg-auto")
+    .appendTo(inputAreaWrapper);
+
+  messagesWrapper.appendTo("body");
 
   messagesWrapper.appendTo("body");
 
@@ -331,6 +352,9 @@ window.addEventListener("load", async function () {
 
   function clearMessageHistory() {
     if (confirm("Are you sure you want to clear your history?")) {
+      try {
+        sendButton_StopGeneration();
+      } catch {}
       actuallyClearMessageHistory();
     }
   }
@@ -351,7 +375,7 @@ window.addEventListener("load", async function () {
   const select = new Html("select")
     .class("fg")
     .class("extra-hidden")
-    .appendTo(selectWrapper); //.appendTo(selectWrapper);
+    .appendTo(selectWrapper);
   const selectWrapperMiddle = new Html().class("fg").appendTo(selectWrapper);
   const toggleBtn = new Html("button")
     .html(ICONS.chevron)
@@ -369,6 +393,7 @@ window.addEventListener("load", async function () {
       customSettingsWrapper.classOn("extra-hidden");
       settings_extraContentWrapper.classOn("extra-hidden");
       convoManageButton.classOn("extra-hidden");
+      userSettingsBtn.classOn("extra-hidden");
       requestUi_wrapper.classOn("extra-hidden");
       heading.classOff("extra-hidden");
       deleteConvoButton.classOn("extra-hidden");
@@ -381,6 +406,7 @@ window.addEventListener("load", async function () {
       toggleBtn.classOn("flip-off"); // mobile
       customSettingsWrapper.classOff("extra-hidden");
       convoManageButton.classOff("extra-hidden");
+      userSettingsBtn.classOff("extra-hidden");
       settings_extraContentWrapper.classOff("extra-hidden");
       requestUi_wrapper.classOff("extra-hidden");
       heading.classOn("extra-hidden");
@@ -444,7 +470,7 @@ window.addEventListener("load", async function () {
     .class("fg")
     .appendTo(customSettings_buttonsWrapper)
     .on("click", () => {
-      // Take the config from the prompt and impot it ..
+      // Take the config from the prompt and import it ..
       const ta = new Html("textarea").attr({ rows: 8, placeholder: "{ ... }" });
 
       const modalContent = new Html("div").text("Import JSON data:").append(
@@ -565,10 +591,8 @@ window.addEventListener("load", async function () {
     .on("input", (e) => {
       localStorage.setItem("remembered-name", usernameInput.elm.value);
       let result = /^[a-zA-Z0-9-]{0,24}$/.test(usernameInput.elm.value);
-      userName = result === true
-        ? usernameInput.elm.value
-        : "user";
-      if (result === false) return e.target.value = 'User';
+      userName = result === true ? usernameInput.elm.value : "user";
+      if (result === false) return (e.target.value = "User");
     })
     .appendTo(settings_extraContentWrapper);
 
@@ -678,7 +702,7 @@ window.addEventListener("load", async function () {
                 } else {
                   setPrompt({ id: "custom", label: "Custom" });
                   const z = JSON.stringify(assistantObj[prp.id]);
-                  // console.log(prp, assistantObj, z);
+
                   importAndLoadPrompt(z, () => {
                     modal.hide();
                   });
@@ -780,11 +804,13 @@ window.addEventListener("load", async function () {
       modal.show();
     });
 
+  const multiRow = new Html().classOn('row').appendTo(settingsContainer);
+
   let convoManageButton = new Html("button")
     .text("Conversation...")
-    .appendTo(settingsContainer)
+    .class('fg')
+    .appendTo(multiRow)
     .on("click", () => {
-      // Take the config and export it
       const modalContent = new Html("div")
         .text("What do you want to do?")
         .append(
@@ -918,6 +944,37 @@ window.addEventListener("load", async function () {
       modal.show();
     });
 
+  let userSettings = {
+    promptPrefix: false, // string | false, if 0 char is false
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || false, // always user time zone, does not need implementation!!
+  };
+
+  try {
+    let us = JSON.parse(localStorage.getItem("userSettings"));
+
+    if (us && us?.promptPrefix && us?.timeZone) userSettings = us;
+  } catch (e) {}
+
+  // Function to save the current user settings to local storage
+  function saveUserSettings() {
+    localStorage.setItem("userSettings", JSON.stringify(userSettings));
+  }
+
+  let userSettingsBtn = new Html("button")
+    .text("Settings")
+    .class('fg')
+    .appendTo(multiRow)
+    .on("click", () => {
+      // WIP
+      const modalContent = new Html("div").append(
+        new Html('p').text("Sorry, but this feature is currently not available.")
+      );
+
+      // Show the settings modal
+      const modal = new Modal(modalContent);
+      modal.show();
+    });
+
   const requestUi_wrapper = new Html()
     .classOn("column")
     .appendTo(settingsContainer);
@@ -990,8 +1047,88 @@ window.addEventListener("load", async function () {
     },
   });
 
+  function futureDate(fd) {
+    const now = new Date();
+    const diff = fd - now;
+
+    let timeString = "";
+    if (diff <= 0) {
+      timeString = "now";
+    } else if (diff < 1000 * 60) {
+      timeString = `${Math.floor(diff / 1000)} seconds`;
+    } else if (diff < 1000 * 60 * 60) {
+      timeString = `${Math.floor(diff / (1000 * 60))} minutes`;
+    } else if (diff < 1000 * 60 * 60 * 24) {
+      timeString = `${Math.floor(diff / (1000 * 60 * 60))} hours`;
+    } else if (diff < 1000 * 60 * 60 * 24 * 7) {
+      timeString = `${Math.floor(diff / (1000 * 60 * 60 * 24))} days`;
+    } else {
+      timeString = fd.toDateString();
+    }
+
+    return timeString;
+  }
+
+  let isTyping = false; // This will be true at any point message generation begins
+  let currentSocket = null;
+  let hasSetUp = false;
+
+  function startTextGeneration() {
+    if (isTyping) return false;
+    request(inputArea.elm.value);
+    inputArea.elm.value = "";
+    scrollDown();
+    autoExpandTextArea();
+    if (hasSetUp === false) {
+      console.log("setting b4unload!");
+      window.addEventListener("beforeunload", b4UnloadHandler, {
+        capture: true,
+      });
+      hasSetUp = true;
+    }
+  }
+
+  function sendButton_StopGeneration() {
+    try {
+      currentSocket?.close && currentSocket?.close();
+      currentSocket?.disconnect && currentSocket?.disconnect();
+    } catch (e) {
+      console.log("failed to close");
+    }
+  }
+  function sendButton_StartGeneration() {
+    if (!isTyping) {
+      startTextGeneration();
+    }
+  }
+
+  function updateState() {
+    console.log(isTyping);
+    switch (isTyping) {
+      case true:
+        inputArea.attr({ placeholder: "Thinking..." });
+        sendButton
+          .classOn("neutral")
+          .html(ICONS.stop)
+          .on("click", sendButton_StopGeneration)
+          .un("click", sendButton_StartGeneration);
+        // console.log("truthy condition met", inputArea, sendButton);
+        break;
+      case false:
+        inputArea.attr({ placeholder: "Message" });
+        sendButton
+          .classOff("neutral")
+          .html(ICONS.send)
+          .on("click", sendButton_StartGeneration)
+          .un("click", sendButton_StopGeneration);
+        // console.log("falsy condition met", inputArea, sendButton);
+        break;
+    }
+  }
+
   function callAiStream(message, callback) {
-    const socket = io(`${OPENAI_URL_WS}`);
+    currentSocket = io(`${OPENAI_URL_WS}`);
+    const socket = currentSocket;
     let receivedInitMessage = false;
     socket.on("connect", () => {
       select.disabled = true;
@@ -1008,9 +1145,13 @@ window.addEventListener("load", async function () {
         context: messageHistory
           .filter((m) => m !== null)
           .slice(0, messageHistory.length - 1),
+        userSettings,
       });
     });
     socket.on("recv", (event) => {
+      if (receivedInitMessage === false) {
+        // Save current conversation to localStorage with its set UUID
+      }
       receivedInitMessage = true;
       callback({ msg: event.data.replace(/\\n/g, "\n") });
     });
@@ -1030,7 +1171,7 @@ window.addEventListener("load", async function () {
       callback(true);
     });
     let onErr = async (e) => {
-      console.log("[ERR]", e);
+      console.log("[ERR!!]", e);
       socket.close();
       if (receivedInitMessage === false) {
         receivedInitMessage = true; // idk this may prevent it from calling again
@@ -1052,7 +1193,8 @@ window.addEventListener("load", async function () {
                 ? "It looks like you ran out of available API requests.<br>Please try again in " +
                   futureDate(new Date(result.expires)) +
                   ", or ask Kat for more lol"
-                : "Something went wrong: An unknown error occured.";
+                : "Something went wrong. " + e;
+            console.error(e);
           } else {
             div.textContent +=
               " Also, It looks like you lost connection. Would you care to refresh?";
@@ -1062,34 +1204,15 @@ window.addEventListener("load", async function () {
             " Also, It looks like you lost connection. Would you care to refresh?";
         }
         callback(true);
+      } else if (e === "io client disconnect") {
+        // Disconnected BUT if we were in the middle of typing just stop completely
+        callback(true);
       }
       select.disabled = false;
     };
     socket.on("disconnect", onErr);
     socket.on("error", onErr);
     socket.on("err", onErr);
-  }
-
-  function futureDate(fd) {
-    const now = new Date();
-    const diff = fd - now;
-
-    let timeString = "";
-    if (diff <= 0) {
-      timeString = "now";
-    } else if (diff < 1000 * 60) {
-      timeString = `${Math.floor(diff / 1000)} seconds`;
-    } else if (diff < 1000 * 60 * 60) {
-      timeString = `${Math.floor(diff / (1000 * 60))} minutes`;
-    } else if (diff < 1000 * 60 * 60 * 24) {
-      timeString = `${Math.floor(diff / (1000 * 60 * 60))} hours`;
-    } else if (diff < 1000 * 60 * 60 * 24 * 7) {
-      timeString = `${Math.floor(diff / (1000 * 60 * 60 * 24))} days`;
-    } else {
-      timeString = fd.toDateString();
-    }
-
-    return timeString;
   }
 
   async function callAiMessage(ai, message) {
@@ -1256,8 +1379,6 @@ window.addEventListener("load", async function () {
   async function request(text, addUserMessage = true) {
     message = text;
 
-    const i = inputArea.elm;
-
     const userIndex =
       messageHistory.push({
         role: "user",
@@ -1280,15 +1401,10 @@ window.addEventListener("load", async function () {
     }
     let ai = makeMessage(1, "", aiIndex, prompt);
 
-    i.disabled = true;
-    deleteConvoButton.elm.disabled = true;
+    isTyping = true;
+    updateState();
 
-    if (prompt.id === "community--clock") {
-      text =
-        `My current timezone is ${
-          Intl.DateTimeFormat().resolvedOptions().timeZone
-        }. ` + text;
-    }
+    console.log(currentSocket);
 
     let result = await callAiMessage(
       ai.elm,
@@ -1298,11 +1414,8 @@ window.addEventListener("load", async function () {
     updateMessage(human.elm);
     messageHistory[aiIndex].content = result;
 
-    i.placeholder = "Preparing..";
-
-    i.placeholder = "Message";
-
-    i.disabled = false;
+    isTyping = false;
+    updateState();
     deleteConvoButton.elm.disabled = false;
 
     await checkRequests();
@@ -1314,24 +1427,55 @@ window.addEventListener("load", async function () {
     chatWindow.scrollTop = chatWindow.scrollHeight;
   }
 
-  inputArea.elm.addEventListener("keydown", (e) => {
-    const keyCode = e.which || e.keyCode;
-    if (keyCode === 13 && !e.shiftKey) {
-      e.preventDefault();
-      if (e.target.value) {
-        request(e.target.value);
-        e.target.value = "";
-        scrollDown();
+  function autoExpandTextArea(e) {
+    inputArea.elm.style.height = "auto";
+    inputArea.elm.style.height = inputArea.elm.scrollHeight + 2 + "px"; // hacky
+  }
+
+  inputArea.elm.addEventListener("input", autoExpandTextArea);
+  inputArea.elm.addEventListener("change", autoExpandTextArea);
+  window.addEventListener("resize", autoExpandTextArea);
+
+  // check if user is on mobile browser
+  const isMobile = /Mobi/.test(navigator.userAgent);
+
+  if (!isMobile) {
+    inputArea.elm.addEventListener("keydown", (e) => {
+      if ((e.code || e.key) === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        if (e.target.value) {
+          // this.alert('Gottem');
+          startTextGeneration();
+        }
       }
-    }
-    var currentRows = e.target.value.split("\n").length;
-    if (keyCode === 13 && e.shiftKey) {
-      currentRows++;
-    }
-    if (currentRows <= 5) {
-      e.target.rows = currentRows;
-    } else {
-      e.target.rows = 5;
-    }
-  });
+    });
+  }
+
+  updateState();
+
+  // // Handle beforeunload once user has interacted with the page
+  // const onFirstPressSetup = (e) => {
+  //   window.removeEventListener("touchend", onFirstPressSetup);
+  //   window.removeEventListener("mousedown", onFirstPressSetup);
+  //   window.removeEventListener("keypress", onFirstPressSetup);
+
+  //   window.addEventListener("beforeunload", (event) => {
+  //     const message =
+  //       "Are you sure you want to leave? Your unsaved conversation will be lost!";
+  //     event.returnValue = message;
+  //   });
+
+  //   console.log("assigned!!!!", e);
+  // };
+
+  // window.addEventListener("touchend", onFirstPressSetup);
+  // window.addEventListener("mousedown", onFirstPressSetup);
+  // window.addEventListener("keypress", onFirstPressSetup);
+
+  const b4UnloadHandler = (event) => {
+    // event.preventDefault();
+    (event || window.event).returnValue = null;
+    return null;
+    // return (event.returnValue = "");
+  };
 });

@@ -153,6 +153,10 @@ body > .messages-wrapper > .messages > .message .data > .text {
   }
 }
 
+textarea {
+  margin: 0;
+}
+
 textarea,
 input,
 select,
@@ -170,6 +174,7 @@ button,
   justify-content: center;
   align-items: center;
   accent-color: #124b31;
+  max-height: 12em;
 }
 
 .meter {
@@ -233,14 +238,16 @@ blockquote {
 blockquote > p {
   display: inline-block;
 }
-body > .messages-wrapper > textarea {
+body > .messages-wrapper > :nth-child(2) {
   position: absolute;
-  bottom: 8px;
-  left: 8px;
-  right: 8px;
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: flex;
-  width: calc(100% - 16px);
+  width: 100%;
   resize: vertical;
+  padding: 8px;
+  background: linear-gradient(180deg, rgba(31, 31, 31, 0) 0%, #1f1f1f 100%);
 }
 
 body > .messages-wrapper > .messages > .message > .icon {
@@ -309,7 +316,8 @@ body > .config {
   padding-top: 0;
 }
 .py-0 {
-  padding: 0;
+  padding-top: 0;
+  padding-bottom: 0;
 }
 .py-1 {
   padding: 6px 0;
@@ -325,6 +333,9 @@ body > .config {
 .fg-auto {
   flex-shrink: 0;
   width: auto;
+}
+.align-end {
+  align-items: flex-end;
 }
 .flip {
   transform: rotate(180deg);

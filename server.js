@@ -12,7 +12,13 @@ const __dirname = path.resolve(path.dirname(__filename));
 
 // Local imports to help set up the server
 import * as Config from "./config.js";
-import { generateResponse, getIp, getSocketioIp, log } from "./api.js";
+import {
+  encodedLengths,
+  generateResponse,
+  getIp,
+  getSocketioIp,
+  log,
+} from "./api.js";
 
 // Create the directories to store logs and conversation history
 if (!existsSync(__dirname + "/logs")) {
@@ -127,6 +133,15 @@ app.get("/api/prompts", (_req, res) => {
 app.get("/hdr", (req, res) => {
   res.json(req.headers);
 });
+app.post("/api/count", express.json, (req, res) => {
+  console.log(req.body);
+  // res.status(500).send('wip');
+  if (req.body && req.body.message && typeof req.body.message === 'string') {
+    res.json(encodedLengths([{ role: "user", content: req.body.message }]));
+  } else {
+    res.status(400).send('missing req.body??')
+  }
+});
 
 import { inspect } from "util";
 
@@ -143,18 +158,17 @@ app.get("/api/usage", (req, res) => {
     expires: new Date(requestsMap.get(ip + "e")).toJSON(),
     plan: plan.label,
   });
-  console.log("ip", ip);
 });
 
-const ver = "v0.4.0";
+const ver = "v0.4.3";
 const sub = "(open source beta)";
 app.get("/api/version", (req, res) => {
   // You can set any message or whatever if you make codebase changes
   res.json({
     version: ver,
     substring: sub,
-    changelog: `<h2>Chatify ${ver}</h2><ul><li>Entire server-side codebase revamp.<ul><li>Migrated from <code>ws</code> to <code>Socket.IO</code></li><li>Cleaned up code in general</li><li>Revamped most of everything to work alongside a configuration file</li><li>Migrated overused functions to api.js</li></li></ul></li><li>This project is now <a href="https://github.com/datkat21/ChatGPT-Chatify">open-source</a>!</li></ul>`,
-    footerNote: `<p class="mt-0">Chatify-AI ${ver} ${sub}.<br>Built with OpenAI's new ChatGPT API.</p>`,
+    changelog: `<h2>Chatify ${ver}</h2><b>This update is still being worked on! Some features are currently not available.</b><ul><li>Updated server-side dashboard</li><li>Type messages while the AI is responding</li><li>Stop text generation</li><li>Automatic date/time recognition based on your time zone</li></ul><p>This project is now <a target="_blank" href="https://github.com/datkat21/ChatGPT-Chatify">open-source</a>!</p></ul>`,
+    footerNote: `<p class="mt-0">Chatify-AI ${ver} ${sub}.<br>Built with OpenAI's new ChatGPT API.<br><b>Note: Conversation logs are stored.</b><br>See our <a target="_blank" href="/usage-terms">usage policy</a>.</p>`,
   });
 });
 
@@ -196,6 +210,8 @@ app.post("/api/generate", (req, res) => {
 
   let result = "";
 
+  let onKill = null;
+
   generateResponse(
     JSON.stringify(req.body),
     (m) => {
@@ -210,6 +226,13 @@ app.post("/api/generate", (req, res) => {
     (m) => {
       res.status(500).json({ error: true, errorMessage: JSON.stringify(m) });
       hasUserRequested = false;
+    },
+    (m) => {
+      onKill = m;
+
+      req.once("error", (_) => {
+        typeof onKill === "function" && onKill();
+      });
     },
     true,
     getIp(req)
@@ -317,6 +340,13 @@ io.on("connection", (sock) => {
       (m) => {
         sock.emit("err", { error: true, errorMessage: JSON.stringify(m) });
         hasUserRequested = false;
+      },
+      (m) => {
+        try {
+          sock.on("error", m);
+        } catch (e) {
+          console.log("[ERR] Failed to stop request..\n", e);
+        }
       },
       true,
       getSocketioIp(sock)

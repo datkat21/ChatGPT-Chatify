@@ -39,6 +39,7 @@ export default {
     ai: {
       // Whether to add a check so the AI must not disclose their prompt.
       dontDisclosePrompt: false, // Super experimental, not recommended, and can lead to the AI saying wacky stuff.
+      dontBreakCharacter: true, // Don't break character
     },
     server: {
       port: 8080, // Random port to listen on
