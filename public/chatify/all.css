@@ -36,13 +36,14 @@ body {
   --transparent-border-alt: #fff1;
   --text-color-accent: #acd3a6;
   --separator: #666;
+  --code-block: rgb(30 41 59);
 }
 :root[data-theme="light"] {
   --accent: #78cfa7 !important;
   --meter: #78cfa7 !important;
   --input-background-color: #00000000 !important;
   --input-border: rgb(84, 84, 84) !important;
-  --button-background-color: #78cfa7 !important;
+  --button-background-color: #c4c4c4 !important;
   --button-neutral-color: #50505041 !important;
   --button-transparent-color: #50505000 !important;
   --button-danger-color: #d58c8c !important;
@@ -50,20 +51,21 @@ body {
   --background-default: #ffffff !important;
   --background-dim: #ebebeb !important;
   --background-dimmer: #e3e3e3 !important;
-  --transparent-border: #fff3 !important;
+  --transparent-border: rgba(0, 0, 0, 0.2) !important;
   --background-light: #f4f4f4 !important;
-  --tab-selector: #252525 !important;
-  --tab-selected: #4d4d4d !important;
+  --tab-selector: #bcbcbc !important;
+  --tab-selected: #ffffff !important;
   --transparent-border-alt: rgba(0, 0, 0, 0.067) !important;
   --text-color-accent: #acd3a6 !important;
   --separator: #666 !important;
+  --code-block: rgb(26, 29, 35);
 }
 :root[data-theme="amoled"] {
   --accent: #626262 !important;
   --meter: #626262 !important;
   --input-background-color: #00000000 !important;
   --input-border: rgb(84, 84, 84) !important;
-  --button-background-color: #0000 !important;
+  --button-background-color: #fff1 !important;
   --button-neutral-color: #50505041 !important;
   --button-transparent-color: #50505000 !important;
   --button-danger-color: #6d2828 !important;
@@ -78,6 +80,18 @@ body {
   --transparent-border-alt: #181818 !important;
   --text-color-accent: #626262 !important;
   --separator: #fff !important;
+  --code-block: #000;
+}
+
+.badge {
+  padding: 4px 8px;
+  border-radius: 99px;
+  text-transform: uppercase;
+  background-color: var(--button-background-color);
+  color: var(--text-color-accent);
+  margin-left: 12px;
+  font-weight: bold;
+  font-size: 11px;
 }
 
 body > .messages-wrapper {
@@ -205,11 +219,11 @@ button.neutral,
 button.transparent {
   background-color: var(--button-neutral-color) !important;
   cursor: pointer;
-  outline: none;
+  border: none;
 }
 button.transparent {
   background-color: var(--button-transparent-color) !important;
-  outline: 1px solid var(--transparent-border);
+  border: 1px solid var(--transparent-border);
 }
 button.transparent:hover,
 button.transparent:active,
@@ -217,7 +231,7 @@ button.transparent:focus,
 button.transparent:target {
   background-color: #0000 !important;
   cursor: pointer;
-  outline: 1px solid #fff;
+  border: 1px solid var(--transparent-border);
 }
 
 input[type="checkbox"] {
@@ -247,7 +261,7 @@ body > .messages-wrapper > :nth-child(2) {
   width: 100%;
   resize: vertical;
   padding: 8px;
-  background: linear-gradient(180deg, rgba(31, 31, 31, 0) 0%, #1f1f1f 100%);
+  background: linear-gradient(180deg, var(--background-dim) 0%, var(--background-default) 100%);
 }
 
 body > .messages-wrapper > .messages > .message > .icon {
@@ -306,6 +320,7 @@ body > .config {
   gap: 8px;
 }
 
+.flex{display: flex;}
 .mt-0 {
   margin-top: 0;
 }
@@ -314,6 +329,12 @@ body > .config {
 }
 .pt-0 {
   padding-top: 0;
+}
+.pb-0 {
+  padding-bottom: 0;
+}
+.pb-2 {
+  padding-bottom: 12px;
 }
 .py-0 {
   padding-top: 0;
@@ -405,7 +426,7 @@ pre {
   white-space: pre-wrap !important;
   background-clip: border-box !important;
   scrollbar-color: var(--background-secondary) !important;
-  background-color: rgb(30 41 59);
+  background-color: var(--code-block);
   border-radius: 10px;
   border: 1px solid #fff3 !important;
 }
@@ -563,7 +584,9 @@ code:not(pre code) {
   padding-bottom: 0.25rem;
   padding-left: 0.5rem;
   padding-right: 0.5rem;
-  background-color: rgb(30 41 59);
+  background-color: var(--code-block);
+  border: 1px solid var(--transparent-border);
+  color: #fff;
   border-radius: 10px;
 }
 /*#endregion*/
@@ -606,6 +629,19 @@ body {
 }
 .extra-hidden {
   display: none !important;
+}
+
+fieldset {
+  background-color: var(--background-dim);
+  border: 1px solid var(--transparent-border);
+  border-radius: 0.3rem;
+  margin: 1.5rem auto;
+  padding: 0.5rem 1rem 1rem 1rem;
+}
+legend {
+  padding: 0 8px;
+  color: var(--separator);
+  text-transform: uppercase;
 }
 
 /* Modal */

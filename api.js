@@ -78,6 +78,11 @@ export const getText = async (
       }`,
     });
 
+    
+    if (userOptions.promptPrefix && userOptions.promptPrefix !== false) {
+      messages.unshift({ role: "system", content: userOptions.promptPrefix });
+    }
+
     if (includeContext === true) {
       messages.push({
         role: "system",
@@ -88,10 +93,6 @@ export const getText = async (
         role: "system",
         content: system,
       });
-    }
-
-    if (userOptions.promptPrefix && userOptions.promptPrefix !== false) {
-      messages.unshift({ role: "system", content: promptPrefix });
     }
 
     if (Config.default.options.ai.dontDisclosePrompt === true) {
@@ -249,10 +250,7 @@ export const generateResponse = async (
 
         // Remove any "Thinking..." prompt
         if (context[context.length - 1].role === 'assistant' && context[context.length - 1].content === 'Thinking...') {
-          log('popping', JSON.stringify(context[context.length - 1], null, 2));
           context.pop();
-        } else {
-          log('FAILED to pop', JSON.stringify(context[context.length - 1], null, 2));
         }
 
         let fetchedPrompt;

@@ -122,6 +122,7 @@ prompts.forEach((p, k) => {
     avatar: p.avatar || null,
     displayName: p.displayName || null,
     prompt: p.prompt || null,
+    greetingMessages: p.greetingMessages || null,
   });
 });
 
@@ -135,11 +136,10 @@ app.get("/hdr", (req, res) => {
 });
 app.post("/api/count", express.json, (req, res) => {
   console.log(req.body);
-  // res.status(500).send('wip');
-  if (req.body && req.body.message && typeof req.body.message === 'string') {
+  if (req.body && req.body.message && typeof req.body.message === "string") {
     res.json(encodedLengths([{ role: "user", content: req.body.message }]));
   } else {
-    res.status(400).send('missing req.body??')
+    res.status(400).send("missing req.body??");
   }
 });
 
@@ -160,16 +160,20 @@ app.get("/api/usage", (req, res) => {
   });
 });
 
-const ver = "v0.4.3";
+const ver = "v0.4.4";
 const sub = "(open source beta)";
 app.get("/api/version", (req, res) => {
   // You can set any message or whatever if you make codebase changes
   res.json({
     version: ver,
     substring: sub,
-    changelog: `<h2>Chatify ${ver}</h2><b>This update is still being worked on! Some features are currently not available.</b><ul><li>Updated server-side dashboard</li><li>Type messages while the AI is responding</li><li>Stop text generation</li><li>Automatic date/time recognition based on your time zone</li></ul><p>This project is now <a target="_blank" href="https://github.com/datkat21/ChatGPT-Chatify">open-source</a>!</p></ul>`,
+    changelog: `<h2>Chatify ${ver}</h2><b>This update is still being worked on! Some features are currently not available.</b><ul><li>User settings modal is now complete and functional</li><li>Selecting a new prompt provides a random predetermined greeting</li><li>Updated server-side dashboard</li><li>Type messages while the AI is responding</li><li>Stop text generation</li><li>Automatic date/time recognition based on your time zone</li></ul><p>This project is now <a target="_blank" href="https://github.com/datkat21/ChatGPT-Chatify">open-source</a>!</p></ul>`,
     footerNote: `<p class="mt-0">Chatify-AI ${ver} ${sub}.<br>Built with OpenAI's new ChatGPT API.<br><b>Note: Conversation logs are stored.</b><br>See our <a target="_blank" href="/usage-terms">usage policy</a>.</p>`,
   });
+});
+
+app.get('/usage-terms', (_req, res) => {
+  res.sendFile(__dirname + '/public/usage-terms.html');
 });
 
 // Entrypoint
@@ -177,21 +181,18 @@ app.get("/api/version", (req, res) => {
 app.use(Config.default.options.entryPoint, express.static("public/chatify"));
 
 // Dashboard
-const ipToPermissionsMap = Config.default.options.dashboard.access.reduce(
-  (map, entry) => {
-    entry.ips.forEach((ip) => {
-      map[ip] = entry.allowed;
-    });
-    return map;
-  },
-  {}
-);
+const ipData = Config.default.options.dashboard.access.reduce((map, entry) => {
+  entry.ips.forEach((ip) => {
+    map[ip] = { allowed: entry.allowed, limit: entry.limit };
+  });
+  return map;
+}, {});
 
 const validateIP = (req, res, next) => {
   const requestIP = getIp(req);
-  const permissions = ipToPermissionsMap[requestIP];
-  if (permissions) {
-    req.permissions = permissions;
+  const data = ipData[requestIP];
+  if (data) {
+    req.data = data;
     next();
   } else {
     res.status(403).send("Forbidden.");
@@ -240,32 +241,34 @@ app.post("/api/generate", (req, res) => {
 });
 
 app.get("/api/dash/logs", validateIP, (req, res) => {
-  const { permissions } = req;
-  if (!permissions.includes("logHistory")) {
+  const { data } = req;
+  if (!data.allowed.includes("logHistory")) {
     res.status(403).send("Forbidden");
     return;
   }
-  res.json(readdirSync(__dirname + "/logs/"));
+  res.json(readdirSync(__dirname + "/logs/").filter(e => data.limit !== undefined ? e.includes(data.limit) : true));
 });
 app.get("/api/dash/logs/:log", validateIP, (req, res) => {
-  const { permissions } = req;
-  if (!permissions.includes("logHistory")) {
+  const { data } = req;
+  if (data.limit && !req.params.log.includes(data.limit)) return res.status(403).send('No');
+  if (!data.allowed.includes("logHistory")) {
     res.status(403).send("Forbidden");
     return;
   }
   res.sendFile(__dirname + "/logs/" + req.params.log);
 });
 app.get("/api/dash/convos", validateIP, (req, res) => {
-  const { permissions } = req;
-  if (!permissions.includes("convoHistory")) {
+  const { data } = req;
+  if (!data.allowed.includes("convoHistory")) {
     res.status(403).send("Forbidden");
     return;
   }
-  res.json(readdirSync(__dirname + "/convos/"));
+  res.json(readdirSync(__dirname + "/convos/").filter(e => data.limit !== undefined ? e.includes(data.limit) : true));
 });
 app.get("/api/dash/convos/:convo", validateIP, (req, res) => {
-  const { permissions } = req;
-  if (!permissions.includes("convoHistory")) {
+  const { data } = req;
+  if (data.limit && !req.params.convo.includes(data.limit)) return res.status(403).send('No');
+  if (!data.allowed.includes("convoHistory")) {
     res.status(403).send("Forbidden");
     return;
   }

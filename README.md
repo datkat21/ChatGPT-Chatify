@@ -63,6 +63,8 @@ prompts.set("your_prompt_id", {
   // Write any generic description message.
   description:
     "This is a default assistant, ready to help at any time!",
+  // A set of greeting messages that show up when the user switches prompt.
+  greetingMessages: ["Hi", "Hello", "Welcome back"]
 });
 ```
 and for community prompts:
@@ -87,6 +89,7 @@ prompts.set("community--cat", {
   // Write any generic description message. For community prompts, I'd recommend to credit the author of the prompt.
   description:
     "Prompt created by Kat21 a.k.a. datkat21.",
+  greetingMessages: ["Meow!"]
 });
 ```
 - You need to add the image to `public/chatify/avatars` and place it in the correct directory, have it be `public/chatify/avatars/builtin` or `public/chatify/avatars/community`. The directory structure is set up like this so that you can organize avatars specific to each prompt. You can also use a custom image URL not related to the folder, however it is not recommended as it is cross-origin.

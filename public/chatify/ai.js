@@ -20,19 +20,19 @@ window.addEventListener("load", async function () {
     }
     class(...val) {
       for (let i = 0; i < val.length; i++) {
-        this.elm.classList.toggle(val);
+        this.elm.classList.toggle(val[i]);
       }
       return this;
     }
     classOn(...val) {
       for (let i = 0; i < val.length; i++) {
-        this.elm.classList.add(val);
+        this.elm.classList.add(val[i]);
       }
       return this;
     }
     classOff(...val) {
       for (let i = 0; i < val.length; i++) {
-        this.elm.classList.remove(val);
+        this.elm.classList.remove(val[i]);
       }
       return this;
     }
@@ -84,7 +84,13 @@ window.addEventListener("load", async function () {
     }
     attr(obj) {
       for (let key in obj) {
-        this.elm.setAttribute(key, obj[key]);
+        if (obj.hasOwnProperty(key)) {
+          if (obj[key] === undefined) {
+            this.elm.removeAttribute(key);
+          } else {
+            this.elm.setAttribute(key, obj[key]);
+          }
+        }
       }
       return this;
     }
@@ -108,8 +114,7 @@ window.addEventListener("load", async function () {
       }
 
       this.closeBtn = new Html("button");
-      this.closeBtn.class("close-btn");
-      this.closeBtn.class("transparent");
+      this.closeBtn.class("close-btn", "transparent");
       this.closeBtn.text("x");
       this.closeBtn.attr({ type: "button" });
       this.closeBtn.on("click", this.hide.bind(this));
@@ -320,9 +325,7 @@ window.addEventListener("load", async function () {
     .appendTo(messagesWrapper);
 
   const inputAreaWrapper = new Html()
-    .classOn("row")
-    .classOn("py-0")
-    .classOn("align-end")
+    .classOn("row", "py-0", "align-end")
     .appendTo(messagesWrapper);
 
   const inputArea = new Html("textarea")
@@ -361,26 +364,21 @@ window.addEventListener("load", async function () {
 
   const heading = new Html("span")
     .text("Chatify")
-    .classOn("extra-hidden")
-    .classOn("label")
+    .classOn("extra-hidden", "label")
     .appendTo(selectWrapper);
   const deleteConvoButton = new Html("button")
     .html(ICONS.trashCan)
-    .classOn("center")
-    .classOn("danger")
-    .classOn("fg-auto")
+    .classOn("center", "danger", "fg-auto")
     .appendTo(selectWrapper)
     .on("click", (_) => clearMessageHistory());
 
   const select = new Html("select")
-    .class("fg")
-    .class("extra-hidden")
+    .class("fg", "extra-hidden")
     .appendTo(selectWrapper);
   const selectWrapperMiddle = new Html().class("fg").appendTo(selectWrapper);
   const toggleBtn = new Html("button")
     .html(ICONS.chevron)
-    .class("fg-auto")
-    .classOn("flip-off")
+    .class("fg-auto", "flip-off")
     .appendTo(selectWrapper);
 
   let menuState = true;
@@ -431,9 +429,7 @@ window.addEventListener("load", async function () {
   let aiAvatarOverride = false;
 
   const customSettingsWrapper = new Html()
-    .class("column", "py-0")
-    .classOn("hidden")
-    .classOn("column")
+    .class("column", "py-0", "hidden")
     .appendTo(settingsContainer);
 
   const customSettings_systemPrompt = new Html("textarea")
@@ -456,18 +452,16 @@ window.addEventListener("load", async function () {
     });
 
   const customSettings_tempWrapper = new Html("span")
-    .classOn("row")
-    .classOn("py-0")
+    .classOn("row", "py-0")
     .appendTo(customSettingsWrapper);
 
   const customSettings_buttonsWrapper = new Html("span")
-    .classOn("row")
-    .classOn("py-0")
+    .classOn("row", "py-0")
     .appendTo(customSettingsWrapper);
 
   new Html("button")
     .text("Import")
-    .class("fg")
+    .classOn("fg")
     .appendTo(customSettings_buttonsWrapper)
     .on("click", () => {
       // Take the config from the prompt and import it ..
@@ -615,8 +609,7 @@ window.addEventListener("load", async function () {
 
   const settings_rememberContextWrapper = new Html("span")
     .appendTo(settings_extraContentWrapper)
-    .classOn("row")
-    .classOn("pt-0");
+    .classOn("row", "pt-0", "pb-0");
 
   const settings_rememberContextCheckbox = new Html("input")
     .attr({ id: "rcc", type: "checkbox" })
@@ -628,13 +621,45 @@ window.addEventListener("load", async function () {
 
   settings_extraContentWrapper.appendTo(settingsContainer);
 
-  function setPrompt(prp) {
+  function setPrompt(prp, makeMessage = true) {
     select.elm.value = prp.id;
     selectPromptBtn.text(prp.label);
     if (select.elm.value === "custom") {
       customSettingsWrapper.classOff("hidden");
     } else {
       customSettingsWrapper.classOn("hidden");
+    }
+
+    if (makeMessage === true) {
+      // Add a message and separator
+      if (prp.greetingMessages && Array.isArray(prp.greetingMessages)) {
+        const m =
+          prp.greetingMessages[
+            Math.floor(Math.random() * prp.greetingMessages.length)
+          ];
+        const index =
+          messageHistory.push({
+            role: "assistant",
+            clientSide: true,
+            type: select.elm.value,
+            content: m,
+          }) - 1;
+        const msg = makeMessage(1, "", index, prp, true);
+        let str = "";
+        selectPromptBtn.elm.disabled = true;
+        let i = 0;
+        const update = () => {
+          if (i >= m.length) {
+            selectPromptBtn.elm.disabled = false;
+          } else {
+            str += m[i];
+            updateMessage(msg.elm, str);
+            i++;
+            setTimeout(update, Math.floor(Math.random() * 15));
+          }
+        };
+        setTimeout(update, Math.floor(Math.random() * 15));
+      }
     }
   }
 
@@ -804,11 +829,11 @@ window.addEventListener("load", async function () {
       modal.show();
     });
 
-  const multiRow = new Html().classOn('row').appendTo(settingsContainer);
+  const multiRow = new Html().classOn("row").appendTo(settingsContainer);
 
   let convoManageButton = new Html("button")
     .text("Conversation...")
-    .class('fg')
+    .class("fg")
     .appendTo(multiRow)
     .on("click", () => {
       const modalContent = new Html("div")
@@ -865,7 +890,8 @@ window.addEventListener("load", async function () {
                                   const item = items[i];
                                   setPrompt(
                                     prompts.find((p) => p.id === item.type) ||
-                                      prompts[0]
+                                      prompts[0],
+                                    false
                                   );
 
                                   const pickedPrompt =
@@ -946,28 +972,70 @@ window.addEventListener("load", async function () {
 
   let userSettings = {
     promptPrefix: false, // string | false, if 0 char is false
-    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || false, // always user time zone, does not need implementation!!
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || false,
+    theme: "dark",
   };
 
   try {
-    let us = JSON.parse(localStorage.getItem("userSettings"));
+    let us = JSON.parse(localStorage.getItem("user-settings"));
 
     if (us && us?.promptPrefix && us?.timeZone) userSettings = us;
   } catch (e) {}
 
+  document.documentElement.dataset.theme = userSettings.theme;
+
   // Function to save the current user settings to local storage
   function saveUserSettings() {
-    localStorage.setItem("userSettings", JSON.stringify(userSettings));
+    localStorage.setItem("user-settings", JSON.stringify(userSettings));
   }
 
   let userSettingsBtn = new Html("button")
     .text("Settings")
-    .class('fg')
+    .class("fg")
     .appendTo(multiRow)
     .on("click", () => {
       // WIP
-      const modalContent = new Html("div").append(
-        new Html('p').text("Sorry, but this feature is currently not available.")
+      const modalContent = new Html("div").classOn("col").appendMany(
+        new Html("fieldset").appendMany(
+          new Html("legend").text("Appearance"),
+          new Html("span").classOn("pb-2", "flex").text("Theme"),
+          new Html("select")
+            .appendMany(
+              new Html("option").text("Dark").attr({
+                value: "dark",
+                selected: userSettings.theme === "dark" ? true : undefined,
+              }),
+              new Html("option").text("Light").attr({
+                value: "light",
+                selected: userSettings.theme === "light" ? true : undefined,
+              }),
+              new Html("option").text("Midnight").attr({
+                value: "amoled",
+                selected: userSettings.theme === "amoled" ? true : undefined,
+              })
+            )
+            .on("input", (e) => {
+              document.documentElement.dataset.theme = e.target.value;
+              userSettings.theme = e.target.value;
+              saveUserSettings();
+            })
+        ),
+        new Html("fieldset").appendMany(
+          new Html("legend").text("Chatbot Settings"),
+          new Html("span").classOn("pb-2", "flex").text("Prompt prefix"),
+          new Html("textarea")
+            .attr({ rows: 4, placeholder: "<none>", resize: "none" })
+            .html(
+              userSettings.promptPrefix !== false
+                ? userSettings.promptPrefix
+                : ""
+            )
+            .on("input", (e) => {
+              userSettings.promptPrefix =
+                e.target.value.length > 0 ? e.target.value : false;
+              saveUserSettings();
+            })
+        )
       );
 
       // Show the settings modal
@@ -1132,6 +1200,9 @@ window.addEventListener("load", async function () {
     let receivedInitMessage = false;
     socket.on("connect", () => {
       select.disabled = true;
+      const mh = messageHistory
+        .filter((m) => m !== null)
+        .slice(0, messageHistory.length - 1);
       socket.emit("begin", {
         user: userName,
         useUserName: settings_enableUserName.elm.checked,
@@ -1142,10 +1213,11 @@ window.addEventListener("load", async function () {
           system: customSettings_systemPrompt.elm.value,
         },
         rememberContext: settings_rememberContextCheckbox.elm.checked,
-        context: messageHistory
-          .filter((m) => m !== null)
-          .slice(0, messageHistory.length - 1),
-        userSettings,
+        context: mh,
+        userSettings: {
+          timeZone: userSettings.timeZone,
+          promptPrefix: userSettings.promptPrefix,
+        },
       });
     });
     socket.on("recv", (event) => {
@@ -1255,14 +1327,18 @@ window.addEventListener("load", async function () {
     });
   }
 
-  function makeMessage(side = 0, data, messageIndex, prompt = null) {
+  function makeMessage(
+    side = 0,
+    data,
+    messageIndex,
+    prompt = null,
+    isSystem = false,
+    actuallyGoesToMessageHistory = true
+  ) {
     if (messageIndex === undefined) messageIndex = messageHistory.length;
     const msg = new Html().class("message");
     const icon = new Html().class("icon").appendTo(msg);
-    const dataContainer = new Html()
-      .class("data")
-      .classOn("fg-max")
-      .appendTo(msg);
+    const dataContainer = new Html().class("data", "fg-max").appendTo(msg);
     const extra = new Html().class("center-row").appendTo(msg);
     const uname = new Html().class("name").appendTo(dataContainer);
     const text = new Html().class("text").appendTo(dataContainer);
@@ -1303,46 +1379,82 @@ window.addEventListener("load", async function () {
             uname.text(aiNameOverride);
           }
         }
+        if (isSystem === true)
+          uname.elm.innerHTML += '<span class="badge">System</span>';
         break;
     }
-    extra.append(
-      new Html("button")
-        .class("transparent")
-        .html(ICONS.trashCan)
-        .on("click", (e) => {
-          let modal;
-          const modalContainer = new Html()
-            .text("Are you sure you want to delete this message?")
-            .append(
-              new Html()
-                .classOn("fg-auto")
-                .classOn("row")
-                .append(
-                  new Html("button")
-                    .text("OK")
-                    .classOn("fg-auto")
-                    .on("click", (e) => {
-                      messageHistory[messageIndex] = null;
-                      window.mh = messageHistory;
-                      msg.cleanup();
-                      modal.hide();
-                    })
-                )
-                .append(
-                  new Html("button")
-                    .text("Cancel")
-                    .classOn("danger")
-                    .classOn("fg-auto")
-                    .on("click", (e) => {
-                      modal.hide();
-                    })
-                )
-            );
+    if (isSystem === false || actuallyGoesToMessageHistory === true) {
+      extra.append(
+        new Html("button")
+          .class("transparent")
+          .html(ICONS.trashCan)
+          .on("click", (e) => {
+            let modal;
+            const modalContainer = new Html()
+              .text("Are you sure you want to delete this message?")
+              .append(
+                new Html()
+                  .classOn("fg-auto", "row")
+                  .append(
+                    new Html("button")
+                      .text("OK")
+                      .classOn("fg-auto")
+                      .on("click", (e) => {
+                        messageHistory[messageIndex] = null;
+                        window.mh = messageHistory;
+                        msg.cleanup();
+                        modal.hide();
+                      })
+                  )
+                  .append(
+                    new Html("button")
+                      .text("Cancel")
+                      .classOn("danger", "fg-auto")
+                      .on("click", (e) => {
+                        modal.hide();
+                      })
+                  )
+              );
 
-          modal = new Modal(modalContainer);
-          modal.show();
-        })
-    );
+            modal = new Modal(modalContainer);
+            modal.show();
+          })
+      );
+    } else {
+      extra.append(
+        new Html("button")
+          .class("transparent")
+          .html(ICONS.trashCan)
+          .on("click", (e) => {
+            let modal;
+            const modalContainer = new Html()
+              .text("Are you sure you want to delete this message?")
+              .append(
+                new Html()
+                  .classOn("fg-auto", "row")
+                  .append(
+                    new Html("button")
+                      .text("OK")
+                      .classOn("fg-auto")
+                      .on("click", (e) => {
+                        msg.cleanup();
+                        modal.hide();
+                      })
+                  )
+                  .append(
+                    new Html("button")
+                      .text("Cancel")
+                      .classOn("danger", "fg-auto")
+                      .on("click", (e) => {
+                        modal.hide();
+                      })
+                  )
+              );
+            modal = new Modal(modalContainer);
+            modal.show();
+          })
+      );
+    }
     msg.appendTo(messagesContainer);
     window.mh = messageHistory;
     scrollDown();
@@ -1406,6 +1518,8 @@ window.addEventListener("load", async function () {
 
     console.log(currentSocket);
 
+    deleteConvoButton.elm.disabled = true; // Required otherwise bad things happen
+
     let result = await callAiMessage(
       ai.elm,
       text,
@@ -1444,7 +1558,6 @@ window.addEventListener("load", async function () {
       if ((e.code || e.key) === "Enter" && !e.shiftKey) {
         e.preventDefault();
         if (e.target.value) {
-          // this.alert('Gottem');
           startTextGeneration();
         }
       }
@@ -1453,29 +1566,8 @@ window.addEventListener("load", async function () {
 
   updateState();
 
-  // // Handle beforeunload once user has interacted with the page
-  // const onFirstPressSetup = (e) => {
-  //   window.removeEventListener("touchend", onFirstPressSetup);
-  //   window.removeEventListener("mousedown", onFirstPressSetup);
-  //   window.removeEventListener("keypress", onFirstPressSetup);
-
-  //   window.addEventListener("beforeunload", (event) => {
-  //     const message =
-  //       "Are you sure you want to leave? Your unsaved conversation will be lost!";
-  //     event.returnValue = message;
-  //   });
-
-  //   console.log("assigned!!!!", e);
-  // };
-
-  // window.addEventListener("touchend", onFirstPressSetup);
-  // window.addEventListener("mousedown", onFirstPressSetup);
-  // window.addEventListener("keypress", onFirstPressSetup);
-
   const b4UnloadHandler = (event) => {
-    // event.preventDefault();
     (event || window.event).returnValue = null;
     return null;
-    // return (event.returnValue = "");
   };
 });
