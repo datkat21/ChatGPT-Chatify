@@ -238,7 +238,11 @@ window.addEventListener("load", () => {
           <h1>Conversations</h1>
           <p>Conversation logs are saved due to the fact that case you lose a conversation you were working on, as we currently have no ways of saving conversations client-side other than manual import/export.</p>
 
-          <a href="#">Back</a> &bull; <input type="text" id="filterBox" placeholder="Search.."> <br><br>
+          <a href="#">Back</a> &bull; <input type="text" id="filterBox" placeholder="Search.." value="${
+            localStorage.getItem("dashboard--lastSearch") !== null
+              ? localStorage.getItem("dashboard--lastSearch").replace('"', '"')
+              : ""
+          }"> <br><br>
           
           <div class="list"></div>
         `,
@@ -254,23 +258,28 @@ window.addEventListener("load", () => {
           .then((jsonData) => {
             jsonData.reverse();
             jsonData.forEach((log) => {
-              document.body.querySelector('.list').insertAdjacentHTML(
-                "beforeend",
-                `<a href="#convoView:${log}">${log}</a> `
-              );
+              document.body
+                .querySelector(".list")
+                .insertAdjacentHTML(
+                  "beforeend",
+                  `<a href="#convoView:${log}">${log}</a> `
+                );
             });
-            document.body.querySelector('input[type="text"]').addEventListener('keyup', (e) => {
+            document.body
+              .querySelector('input[type="text"]')
+              .addEventListener("keyup", (e) => {
                 const value = e.target.value.toLowerCase();
-                
-                document.querySelectorAll('.list a').forEach(function(item) {
+                localStorage.setItem("dashboard--lastSearch", value);
+
+                document.querySelectorAll(".list a").forEach(function (item) {
                   const text = item.textContent.toLowerCase();
                   if (text.indexOf(value) !== -1) {
-                    item.style.display = '';
+                    item.style.display = "";
                   } else {
-                    item.style.display = 'none';
+                    item.style.display = "none";
                   }
                 });
-            });
+              });
           })
           .catch((error) => {
             console.log(`Error fetching convos: ${error}`);
