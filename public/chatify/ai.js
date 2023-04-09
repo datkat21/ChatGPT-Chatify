@@ -621,7 +621,7 @@ window.addEventListener("load", async function () {
 
   settings_extraContentWrapper.appendTo(settingsContainer);
 
-  function setPrompt(prp, makeMessage = true) {
+  function setPrompt(prp, mkMsg = true) {
     select.elm.value = prp.id;
     selectPromptBtn.text(prp.label);
     if (select.elm.value === "custom") {
@@ -630,7 +630,7 @@ window.addEventListener("load", async function () {
       customSettingsWrapper.classOn("hidden");
     }
 
-    if (makeMessage === true) {
+    if (mkMsg === true) {
       // Add a message and separator
       if (prp.greetingMessages && Array.isArray(prp.greetingMessages)) {
         const m =
