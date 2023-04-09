@@ -265,7 +265,7 @@ body > .messages-wrapper > :nth-child(2) {
 }
 
 body > .messages-wrapper > .messages > .message > .icon {
-  background-color: #1c1c1c;
+  background-color: transparent;
   background-repeat: no-repeat;
   background-position: center;
   width: 32px;
@@ -382,7 +382,7 @@ body > .messages-wrapper > .messages > .message.user .icon {
 }
 
 .icon {
-  background-color: #111b10;
+  background-color: transparent;
   background-image: var(--icon, url("./assets/avatars/custom.svg"));
   background-size: 32px 32px;
 }
