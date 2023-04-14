@@ -83,14 +83,22 @@ export const getText = async (
       messages.unshift({ role: "system", content: userOptions.promptPrefix });
     }
 
+    console.log(modelOptions);
+
+    let type = 'system';
+
+    if (modelOptions.isFirstMessageSystem && modelOptions.isFirstMessageSystem === false) {
+      type = 'user';
+    }
+
     if (includeContext === true) {
       messages.push({
-        role: "system",
+        role: type,
         content: system,
       });
     } else {
       messages.unshift({
-        role: "system",
+        role: type,
         content: system,
       });
     }
@@ -296,12 +304,12 @@ export const generateResponse = async (
             ? prompts.values().next().value.prompt // Fetch the first prompt
             : fetchedPrompt,
           context,
-          {
+          Object.assign({
             temp:
               bot !== undefined && bot?.temp !== undefined
                 ? bot?.temp ?? 0.7
                 : 0.7,
-          },
+          }, bot),
           function (r) {
             if (r?.error && r?.error === true) {
               callbackData({ error: true, errorMessage: r.message });

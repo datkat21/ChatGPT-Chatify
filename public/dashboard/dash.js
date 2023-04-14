@@ -19,19 +19,19 @@ window.addEventListener("load", () => {
     }
     class(...val) {
       for (let i = 0; i < val.length; i++) {
-        this.elm.classList.toggle(val);
+        this.elm.classList.toggle(val[i]);
       }
       return this;
     }
     classOn(...val) {
       for (let i = 0; i < val.length; i++) {
-        this.elm.classList.add(val);
+        this.elm.classList.add(val[i]);
       }
       return this;
     }
     classOff(...val) {
       for (let i = 0; i < val.length; i++) {
-        this.elm.classList.remove(val);
+        this.elm.classList.remove(val[i]);
       }
       return this;
     }
