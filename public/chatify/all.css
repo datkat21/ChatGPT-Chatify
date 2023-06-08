@@ -82,6 +82,28 @@ body {
   --separator: #fff !important;
   --code-block: #000;
 }
+:root[data-theme="clean-dark"] {
+  --accent: #1445b8;
+  --meter: #1445b8;
+  --input-background-color: #141822;
+  --input-border: #2b3345;
+  --button-background-color: #2a3858;
+  --button-neutral-color: #50505041;
+  --button-transparent-color: #50505000;
+  --button-danger-color: #4b1212;
+  --text-color: #ffffff;
+  --background-default: #0f1219;
+  --background-dim: #090c11;
+  --background-dimmer: #090c11;
+  --transparent-border: #2b3345;
+  --background-light: #161b27;
+  --tab-selector: #0f1219;
+  --tab-selected: #2a3858;
+  --transparent-border-alt: #2b3345;
+  --text-color-accent: #99acd6;
+  --separator: #99acd6;
+  --code-block: rgb(30 41 59);
+}
 
 .badge {
   padding: 4px 8px;
@@ -187,7 +209,7 @@ button,
   width: 100%;
   justify-content: center;
   align-items: center;
-  accent-color: #124b31;
+  accent-color: var(--accent);
   max-height: 12em;
 }
 
@@ -200,7 +222,7 @@ button,
 }
 
 .meter > div {
-  background-color: #4e9876;
+  background-color: var(--meter);
   height: 100%;
 }
 
@@ -261,10 +283,14 @@ body > .messages-wrapper > :nth-child(2) {
   width: 100%;
   resize: vertical;
   padding: 8px;
-  background: linear-gradient(180deg, transparent 0%, var(--background-default) 100%);
+  background: linear-gradient(
+    180deg,
+    transparent 0%,
+    var(--background-default) 100%
+  );
 }
 
-body > .messages-wrapper > .messages > .message > .icon {
+body > .messages-wrapper > .messages > .message > .wrapper > .icon {
   background-color: transparent;
   background-repeat: no-repeat;
   background-position: center;
@@ -281,9 +307,13 @@ body > .config {
   padding: 12px;
   background-color: var(--background-dim);
   border-right: 1px solid var(--transparent-border-alt);
+  min-width: 300px;
 }
 
 /* Utility */
+.mw-0 {
+  min-width: 0 !important;
+}
 .column {
   display: flex;
   flex-direction: column;
@@ -320,7 +350,9 @@ body > .config {
   gap: 8px;
 }
 
-.flex{display: flex;}
+.flex {
+  display: flex;
+}
 .mt-0 {
   margin-top: 0;
 }
@@ -329,6 +361,9 @@ body > .config {
 }
 .pt-0 {
   padding-top: 0;
+}
+.pt-2 {
+  padding-top: 12px;
 }
 .pb-0 {
   padding-bottom: 0;
@@ -396,7 +431,7 @@ body > .messages-wrapper > .messages > .message.user .icon {
 }
 
 a {
-  color: #40b781;
+  color: var(--accent);
   text-decoration: none;
   cursor: pointer;
 }
@@ -404,7 +439,7 @@ a {
 a:hover,
 a:focus,
 a:active {
-  color: rgb(148, 252, 205);
+  color: var(--text-color-accent);
 }
 
 .message p {
@@ -591,7 +626,7 @@ code:not(pre code) {
 }
 /*#endregion*/
 
-.thinking .text :last-child::after {
+.thinking .text > :last-child::after {
   content: "|";
   animation: cursor 1s infinite;
 }
@@ -639,8 +674,9 @@ fieldset {
   padding: 0.5rem 1rem 1rem 1rem;
 }
 legend {
-  padding: 0 8px;
+  padding: 0 6px;
   color: var(--separator);
+  font-weight: bold;
   text-transform: uppercase;
 }
 
@@ -843,4 +879,47 @@ del::after {
   opacity: 0.7;
   content: "~~";
   font: inherit;
+}
+
+.message > .wrapper {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+}
+
+[data-chat-view-type="compact"] .message .data {
+  justify-content: flex-start;
+  align-items: flex-start;
+  display: flex;
+  gap: 10px;
+}
+[data-chat-view-type="compact"] .message .data .name {
+  height: 32px;
+}
+[data-chat-view-type="compact"] .message .data .text {
+  min-height: 32px !important;
+  margin: 0 !important;
+}
+[data-chat-view-type="compact"] .message p {
+  margin: 0 !important;
+}
+
+[data-chat-view-type="bubbles"] .message {
+  padding: 0 3vmax !important;
+  background-color: transparent !important;
+}
+[data-chat-view-type="bubbles"] .message.user > .wrapper {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+[data-chat-view-type="bubbles"] .message > .wrapper .text {
+  display: inline-block;
+  padding: 4px 16px;
+  border-radius: 6px;
+}
+[data-chat-view-type="bubbles"] .message.gpt > .wrapper .text {
+  background-color: var(--accent);
+}
+[data-chat-view-type="bubbles"] .message.user > .wrapper .text {
+  background-color: var(--background-light);
 }

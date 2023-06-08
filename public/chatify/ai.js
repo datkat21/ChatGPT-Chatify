@@ -171,6 +171,28 @@ window.addEventListener("load", async function () {
     }
   }
 
+  function colorContrast(color) {
+    l = (c) => {
+      h = (c) => {
+        if (c.length === 3)
+          c =
+            c.charAt(0) +
+            c.charAt(0) +
+            c.charAt(1) +
+            c.charAt(1) +
+            c.charAt(2) +
+            c.charAt(2);
+        else if (c.length !== 6) throw "Invalid hex color: " + c;
+        var r = [];
+        for (var i = 0; i <= 2; i++) r[i] = parseInt(c.substr(i * 2, 2), 16);
+        return r;
+      };
+      var r = typeof c === "string" ? h(c) : c;
+      return 0.2126 * r[0] + 0.7152 * r[1] + 0.0722 * r[2];
+    };
+    return l(color) >= 165 ? "000" : "fff";
+  }
+
   function toSnakeCase(name) {
     return name.trim().toLowerCase().replace(/\s+/g, "-");
   }
@@ -331,7 +353,7 @@ window.addEventListener("load", async function () {
   const inputArea = new Html("textarea")
     .classOn("fg")
     .attr({ type: "text", placeholder: "Message", rows: "1" })
-    .style({ flexGrow: "1" })
+    .style({ resize: "vertical", "min-height": "34px" })
     .appendTo(inputAreaWrapper);
 
   const sendButton = new Html("button")
@@ -345,12 +367,12 @@ window.addEventListener("load", async function () {
 
   const selectWrapper = new Html().class("row").appendTo(settingsContainer);
 
-  makeMsgSeparator("The conversation begins...");
+  makeMsgSeparator("Your conversation begins here.");
 
   function actuallyClearMessageHistory() {
     messageHistory = [];
     messagesContainer.html("");
-    makeMsgSeparator("The conversation begins...");
+    makeMsgSeparator("Your conversation begins here.");
   }
 
   function clearMessageHistory() {
@@ -389,29 +411,31 @@ window.addEventListener("load", async function () {
       toggleBtn.classOff("flip-off");
       toggleBtn.classOn("flip");
       customSettingsWrapper.classOn("extra-hidden");
-      settings_extraContentWrapper.classOn("extra-hidden");
       convoManageButton.classOn("extra-hidden");
       userSettingsBtn.classOn("extra-hidden");
       requestUi_wrapper.classOn("extra-hidden");
       heading.classOff("extra-hidden");
+      multiRow.classOn("extra-hidden");
       deleteConvoButton.classOn("extra-hidden");
       toggleBtn.style({ "margin-left": "auto" });
       selectPromptBtn.classOn("extra-hidden");
       debugVersionNumber.classOn("extra-hidden");
+      settingsContainer.classOn("mw-0");
     } else if (menuState === false) {
       menuState = true;
       toggleBtn.classOff("flip");
       toggleBtn.classOn("flip-off"); // mobile
+      multiRow.classOff("extra-hidden");
       customSettingsWrapper.classOff("extra-hidden");
       convoManageButton.classOff("extra-hidden");
       userSettingsBtn.classOff("extra-hidden");
-      settings_extraContentWrapper.classOff("extra-hidden");
       requestUi_wrapper.classOff("extra-hidden");
       heading.classOn("extra-hidden");
       deleteConvoButton.classOff("extra-hidden");
       toggleBtn.style({ "margin-left": "unset" });
       selectPromptBtn.classOff("extra-hidden");
       debugVersionNumber.classOff("extra-hidden");
+      settingsContainer.classOff("mw-0");
     }
   });
 
@@ -429,7 +453,7 @@ window.addEventListener("load", async function () {
   let aiAvatarOverride = false;
 
   const customSettingsWrapper = new Html()
-    .class("column", "py-0", "hidden")
+    .class("column", "pb-2", "pt-0", "hidden")
     .appendTo(settingsContainer);
 
   const customSettings_systemPrompt = new Html("textarea")
@@ -572,54 +596,7 @@ window.addEventListener("load", async function () {
     .attr({ id: "temp", type: "range", min: "0", max: "1", step: "0.01" })
     .appendTo(customSettings_tempWrapper);
 
-  let userName;
-
-  const settings_extraContentWrapper = new Html("span");
-  const usernameInput = new Html("input")
-    .attr({
-      type: "text",
-      placeholder: "Username",
-      maxlength: "24",
-      minlength: "1",
-    })
-    .on("input", (e) => {
-      localStorage.setItem("remembered-name", usernameInput.elm.value);
-      let result = /^[a-zA-Z0-9-]{0,24}$/.test(usernameInput.elm.value);
-      userName = result === true ? usernameInput.elm.value : "user";
-      if (result === false) return (e.target.value = "User");
-    })
-    .appendTo(settings_extraContentWrapper);
-
-  usernameInput.elm.value = localStorage.getItem("remembered-name") ?? "User";
-  userName = /^[a-zA-Z0-9-]{0,24}$/.test(usernameInput.elm.value)
-    ? usernameInput.elm.value
-    : "user";
-
-  const settings_enableUserNameWrapper = new Html("span")
-    .appendTo(settings_extraContentWrapper)
-    .classOn("row");
-
-  const settings_enableUserName = new Html("input")
-    .attr({ id: "u", type: "checkbox" })
-    .appendTo(settings_enableUserNameWrapper);
-  new Html("label")
-    .attr({ for: "u" })
-    .text("Include username?")
-    .appendTo(settings_enableUserNameWrapper);
-
-  const settings_rememberContextWrapper = new Html("span")
-    .appendTo(settings_extraContentWrapper)
-    .classOn("row", "pt-0", "pb-0");
-
-  const settings_rememberContextCheckbox = new Html("input")
-    .attr({ id: "rcc", type: "checkbox" })
-    .appendTo(settings_rememberContextWrapper);
-  new Html("label")
-    .attr({ for: "rcc" })
-    .text("Experimental: Remember context better")
-    .appendTo(settings_rememberContextWrapper);
-
-  settings_extraContentWrapper.appendTo(settingsContainer);
+  let userName = localStorage.getItem("remembered-name") ?? "User";
 
   function setPrompt(prp, mkMsg = true) {
     select.elm.value = prp.id;
@@ -665,9 +642,7 @@ window.addEventListener("load", async function () {
 
   const selectPromptBtn = new Html("button")
     .text("Select prompt..")
-    .classOn("transparent")
-    .classOn("fg")
-    .classOn("w-100")
+    .classOn("transparent", "fg", "w-100")
     .appendTo(selectWrapperMiddle)
     .on("click", () => {
       const tabsButtons = new Html().classOn("row").classOn("fg");
@@ -971,72 +946,206 @@ window.addEventListener("load", async function () {
     });
 
   let userSettings = {
-    promptPrefix: false, // string | false, if 0 char is false
+    promptPrefix: "", // string | false, if 0 char is false
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || false,
-    theme: "dark",
+    theme: "clean-dark",
+    username: "User",
+    includeUsername: false,
+    rememberContext: false,
+    chatViewType: "cozy",
   };
 
-  try {
-    let us = JSON.parse(localStorage.getItem("user-settings"));
+  function loadUserSettings() {
+    try {
+      let us = JSON.parse(localStorage.getItem("user-settings"));
 
-    if (us && us?.promptPrefix && us?.timeZone) userSettings = us;
-  } catch (e) {}
+      if (us !== null && us.promptPrefix !== null && us.timeZone !== null)
+        userSettings = us;
 
-  document.documentElement.dataset.theme = userSettings.theme;
+      document.documentElement.dataset.theme = userSettings.theme;
+      document.documentElement.dataset.chatViewType = userSettings.chatViewType;
+    } catch (e) {}
+  }
+
+  loadUserSettings();
+
+  window.addEventListener("storage", (e) => {
+    loadUserSettings();
+    window.dispatchEvent(
+      new CustomEvent("chatify-settings-update", {
+        detail: { data: e.newValue },
+      })
+    );
+  });
 
   // Function to save the current user settings to local storage
   function saveUserSettings() {
     localStorage.setItem("user-settings", JSON.stringify(userSettings));
   }
 
-  let userSettingsBtn = new Html("button")
+  const userSettingsBtn = new Html("button")
     .text("Settings")
     .class("fg")
     .appendTo(multiRow)
     .on("click", () => {
-      // WIP
-      const modalContent = new Html("div").classOn("col").appendMany(
-        new Html("fieldset").appendMany(
-          new Html("legend").text("Appearance"),
-          new Html("span").classOn("pb-2", "flex").text("Theme"),
-          new Html("select")
-            .appendMany(
-              new Html("option").text("Dark").attr({
-                value: "dark",
-                selected: userSettings.theme === "dark" ? true : undefined,
-              }),
-              new Html("option").text("Light").attr({
-                value: "light",
-                selected: userSettings.theme === "light" ? true : undefined,
-              }),
-              new Html("option").text("Midnight").attr({
-                value: "amoled",
-                selected: userSettings.theme === "amoled" ? true : undefined,
-              })
-            )
-            .on("input", (e) => {
-              document.documentElement.dataset.theme = e.target.value;
-              userSettings.theme = e.target.value;
-              saveUserSettings();
-            })
-        ),
-        new Html("fieldset").appendMany(
-          new Html("legend").text("Chatbot Settings"),
-          new Html("span").classOn("pb-2", "flex").text("Prompt prefix"),
-          new Html("textarea")
-            .attr({ rows: 4, placeholder: "<none>", resize: "none" })
-            .html(
-              userSettings.promptPrefix !== false
-                ? userSettings.promptPrefix
-                : ""
-            )
-            .on("input", (e) => {
-              userSettings.promptPrefix =
-                e.target.value.length > 0 ? e.target.value : false;
-              saveUserSettings();
-            })
+      // User name input
+      const usernameInput = new Html("input")
+        .attr({
+          type: "text",
+          placeholder: "Username",
+          maxlength: "24",
+          minlength: "1",
+        })
+        .on("input", (e) => {
+          localStorage.setItem("remembered-name", usernameInput.elm.value);
+          const result = /^[a-zA-Z0-9-]{0,24}$/.test(usernameInput.elm.value);
+          userName = result === true ? usernameInput.elm.value : "user";
+          userSettings.username = userName;
+          saveUserSettings();
+          if (result === false) return (e.target.value = "User");
+        });
+
+      usernameInput.elm.value =
+        localStorage.getItem("remembered-name") ?? "User";
+      userName = /^[a-zA-Z0-9-]{0,24}$/.test(usernameInput.elm.value)
+        ? usernameInput.elm.value
+        : "user";
+
+      // Checkboxes
+      const settings_extraContentWrapper = new Html("span");
+
+      const settings_enableUserNameWrapper = new Html("span")
+        .appendTo(settings_extraContentWrapper)
+        .classOn("row");
+
+      const settings_enableUserName = new Html("input")
+        .attr({
+          id: "u",
+          type: "checkbox",
+          checked: userSettings.includeUsername === true ? true : undefined,
+        })
+        .on("input", (e) => {
+          userSettings.includeUsername = e.target.checked;
+          saveUserSettings();
+        })
+        .appendTo(settings_enableUserNameWrapper);
+      new Html("label")
+        .attr({
+          for: "u",
+        })
+        .text("Include username?")
+        .appendTo(settings_enableUserNameWrapper);
+
+      const settings_rememberContextWrapper = new Html("span")
+        .appendTo(settings_extraContentWrapper)
+        .classOn("row", "pt-0", "pb-0");
+
+      const settings_rememberContextCheckbox = new Html("input")
+        .attr({
+          id: "rcc",
+          type: "checkbox",
+          checked: userSettings.rememberContext === true ? true : undefined,
+        })
+        .on("input", (e) => {
+          userSettings.rememberContext = e.target.checked;
+          saveUserSettings();
+        })
+        .appendTo(settings_rememberContextWrapper);
+      new Html("label")
+        .attr({
+          for: "rcc",
+        })
+        .text("Experimental: Remember context better")
+        .appendTo(settings_rememberContextWrapper);
+
+      const themeSelect = new Html("select")
+        .appendMany(
+          new Html("option").text("Dark").attr({
+            value: "dark",
+            selected: userSettings.theme === "dark" ? true : undefined,
+          }),
+          new Html("option").text("Light").attr({
+            value: "light",
+            selected: userSettings.theme === "light" ? true : undefined,
+          }),
+          new Html("option").text("Midnight").attr({
+            value: "amoled",
+            selected: userSettings.theme === "amoled" ? true : undefined,
+          }),
+          new Html("option").text("Clean Dark").attr({
+            value: "clean-dark",
+            selected: userSettings.theme === "clean-dark" ? true : undefined,
+          })
         )
-      );
+        .on("input", (e) => {
+          document.documentElement.dataset.theme = e.target.value;
+          userSettings.theme = e.target.value;
+          saveUserSettings();
+        });
+      const chatSelect = new Html("select")
+        .appendMany(
+          new Html("option").text("Cozy (default)").attr({
+            value: "cozy",
+            selected: userSettings.chatViewType === "cozy" ? true : undefined,
+          }),
+          new Html("option").text("Compact").attr({
+            value: "compact",
+            selected:
+              userSettings.chatViewType === "compact" ? true : undefined,
+          }),
+          new Html("option").text("Bubbles").attr({
+            value: "bubbles",
+            selected:
+              userSettings.chatViewType === "bubbles" ? true : undefined,
+          })
+        )
+        .on("input", (e) => {
+          document.documentElement.dataset.chatViewType = e.target.value;
+          userSettings.chatViewType = e.target.value;
+          saveUserSettings();
+        });
+
+      const promptPrefixBox = new Html("textarea")
+        .attr({ rows: 4, placeholder: "<none>", resize: "none" })
+        .html(userSettings.promptPrefix !== "" ? userSettings.promptPrefix : "")
+        .on("input", (e) => {
+          userSettings.promptPrefix =
+            e.target.value.length > 0 ? e.target.value : false;
+          saveUserSettings();
+        });
+
+      const modalContent = new Html("div")
+        .classOn("col")
+        .appendMany(
+          new Html("fieldset").appendMany(
+            new Html("legend").text("Personalization"),
+            new Html("span").classOn("pb-2", "flex").text("Username"),
+            usernameInput,
+            settings_extraContentWrapper
+          ),
+          new Html("fieldset").appendMany(
+            new Html("legend").text("Appearance"),
+            new Html("span").classOn("pb-2", "flex").text("Theme"),
+            themeSelect,
+            new Html("span").classOn("pb-2", "pt-2", "flex").text("Chat Style"),
+            chatSelect
+          ),
+          new Html("fieldset").appendMany(
+            new Html("legend").text("Chatbot Settings"),
+            new Html("span").classOn("pb-2", "flex").text("Prompt prefix"),
+            promptPrefixBox
+          )
+        );
+
+      window.addEventListener("chatify-settings-update", function (e) {
+        usernameInput.elm.value = userSettings.username;
+        settings_enableUserName.elm.checked = userSettings.includeUsername;
+        settings_rememberContextCheckbox.elm.checked =
+          userSettings.rememberContext;
+        themeSelect.elm.value = userSettings.theme;
+        chatSelect.elm.value = userSettings.chatViewType;
+        promptPrefixBox.elm.value = userSettings.promptPrefix;
+      });
 
       // Show the settings modal
       const modal = new Modal(modalContent);
@@ -1205,14 +1314,14 @@ window.addEventListener("load", async function () {
         .slice(0, messageHistory.length - 1);
       socket.emit("begin", {
         user: userName,
-        useUserName: settings_enableUserName.elm.checked,
+        useUserName: userSettings.includeUsername,
         prompt: message,
         botPrompt: select.elm.value,
         customSettings: {
           temp: parseFloat(customSettings_temp.elm.value),
           system: customSettings_systemPrompt.elm.value,
         },
-        rememberContext: settings_rememberContextCheckbox.elm.checked,
+        rememberContext: userSettings.rememberContext,
         context: mh,
         userSettings: {
           timeZone: userSettings.timeZone,
@@ -1264,7 +1373,7 @@ window.addEventListener("load", async function () {
               result.remaining === 0
                 ? "It looks like you ran out of available API requests.<br>Please try again in " +
                   futureDate(new Date(result.expires)) +
-                  ", or ask Kat for more lol"
+                  ", or ask the owner of this instance to update your plan."
                 : "Something went wrong. " + e;
             console.error(e);
           } else {
@@ -1337,8 +1446,11 @@ window.addEventListener("load", async function () {
   ) {
     if (messageIndex === undefined) messageIndex = messageHistory.length;
     const msg = new Html().class("message");
-    const icon = new Html().class("icon").appendTo(msg);
-    const dataContainer = new Html().class("data", "fg-max").appendTo(msg);
+    const messageContentWrapper = new Html().class("wrapper").appendTo(msg);
+    const icon = new Html().class("icon").appendTo(messageContentWrapper);
+    const dataContainer = new Html()
+      .class("data", "fg-max")
+      .appendTo(messageContentWrapper);
     const extra = new Html().class("center-row").appendTo(msg);
     const uname = new Html().class("name").appendTo(dataContainer);
     const text = new Html().class("text").appendTo(dataContainer);
@@ -1461,7 +1573,7 @@ window.addEventListener("load", async function () {
     return msg;
   }
 
-  function makeMsgSeparator(content = "The conversation continues...") {
+  function makeMsgSeparator(content = "The conversation resumes.") {
     new Html()
       .append(new Html("span").classOn("text").text(content))
       .classOn("separator")
@@ -1495,7 +1607,7 @@ window.addEventListener("load", async function () {
       messageHistory.push({
         role: "user",
         content: text,
-        name: usernameInput.elm.value,
+        name: userSettings.username,
       }) - 1;
 
     const aiIndex =
@@ -1538,12 +1650,20 @@ window.addEventListener("load", async function () {
 
   function scrollDown() {
     var chatWindow = messagesContainer.elm;
+    console.log(
+      chatWindow.scrollHeight,
+      chatWindow.offsetHeight,
+      document.documentElement.offsetHeight
+    );
     chatWindow.scrollTop = chatWindow.scrollHeight;
   }
 
   function autoExpandTextArea(e) {
     inputArea.elm.style.height = "auto";
-    inputArea.elm.style.height = inputArea.elm.scrollHeight + 2 + "px"; // hacky
+    inputArea.elm.style.height = inputArea.elm.scrollHeight + 2 + "px";
+
+    const inputAreaHeight = inputArea.elm.offsetHeight;
+    messagesContainer.elm.style.paddingBottom = `${inputAreaHeight + 12}px`;
   }
 
   inputArea.elm.addEventListener("input", autoExpandTextArea);

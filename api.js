@@ -19,19 +19,33 @@ export function encodedLengths(messages, model = "gpt-3.5-turbo-0301") {
   if (model == "gpt-3.5-turbo-0301") {
     const encodedLengths = [];
 
+    // New (experimental) token parser to hopefully prevent most crashes...
     for (let message of messages) {
       let messageLength = 4;
-
       for (let [key, value] of Object.entries(message)) {
-        messageLength += Array.isArray(value) ? value.length : 1; // take array length into account
+        messageLength += Array.isArray(value) ? value.length : 1;
         if (key === "name") {
-          messageLength -= 1; // if there's a name, the role is omitted
+          messageLength -= 1;
         } else {
-          messageLength += encoding.encode(value).length;
+          let encodeCounter = 0;
+          while (encodeCounter < 3) {
+            try {
+              messageLength += encoding.encode(value).length;
+              break;
+            } catch (error) {
+              console.error(error);
+              encodeCounter++;
+              if (encodeCounter >= 3) {
+                console.warn(
+                  `Skipping value: ${value} after ${encodeCounter} errors.`
+                );
+                break;
+              }
+            }
+          }
         }
       }
-
-      messageLength += 2; // every reply is primed with <im_start>assistant
+      messageLength += 2;
       encodedLengths.push(messageLength);
     }
 
@@ -78,17 +92,19 @@ export const getText = async (
       }`,
     });
 
-    
     if (userOptions.promptPrefix && userOptions.promptPrefix !== false) {
       messages.unshift({ role: "system", content: userOptions.promptPrefix });
     }
 
-    console.log(modelOptions);
+    // console.log(modelOptions);
 
-    let type = 'system';
+    let type = "system";
 
-    if (modelOptions.isFirstMessageSystem && modelOptions.isFirstMessageSystem === false) {
-      type = 'user';
+    if (
+      modelOptions.isFirstMessageSystem &&
+      modelOptions.isFirstMessageSystem === false
+    ) {
+      type = "user";
     }
 
     if (includeContext === true) {
@@ -120,31 +136,44 @@ export const getText = async (
       // });
     }
 
+    // console.log("Counting tokens, just to be sure...");
+
+    const enc = encodedLengths(messages);
+
+    var x = 0;
+    enc.forEach((e) => {
+      x += e;
+    });
+
+    // console.log("Got encodings..", enc, "Total:", x);
+
+    // console.log("Preparing request...");
+
+    const reqBody = {
+      messages: messages,
+      temperature: modelOptions.temp,
+      max_tokens: modelOptions.maxTokens,
+      top_p: 1,
+      frequency_penalty: 0,
+      presence_penalty: 0,
+      model: "gpt-3.5-turbo",
+      stream: true,
+    };
+
+    // console.log(reqBody);
+
     /* This was made before OpenAI's Node.js API had chat completion support,
     considering a revamp soon, but for now I think it still works fine! */
+    // NOTE: Major bug it seems (with API?!) I get 400 Bad Request RANDOMLY!
     axios
-      .post(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          messages: messages,
-          temperature: modelOptions.temp,
-          max_tokens: modelOptions.maxTokens,
-          top_p: 1,
-          frequency_penalty: 0,
-          presence_penalty: 0,
-          model: "gpt-3.5-turbo",
-          stream: true,
+      .post("https://api.openai.com/v1/chat/completions", reqBody, {
+        responseType: "stream",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + key,
         },
-        {
-          responseType: "stream",
-          headers: {
-            "Content-Type": "application/json",
-            "OpenAI-Organization": process.env.OPENAI_ORG,
-            Authorization: "Bearer " + key,
-          },
-          signal: abortSignal,
-        }
-      )
+        signal: abortSignal,
+      })
       .then((d) => {
         let result = "";
         const stream = d.data;
@@ -235,7 +264,7 @@ export const generateResponse = async (
                   "Bad promptPrefix data, remove it or make it a string"
                 );
               const encL = userSettings.promptPrefix.length;
-              if (encL > 3096) return callbackError("Too much promptPrefix");
+              if (encL > 4096) return callbackError("Too much promptPrefix");
               if (
                 userSettings.promptTooSmall !== undefined &&
                 userSettings.promptTooSmall === true
@@ -243,7 +272,7 @@ export const generateResponse = async (
                 return callbackError(
                   "Don't try and get past promptPrefix length limit"
                 );
-              if (encL < 1) userSettings.promptTooSmall = true; // pass on adding the msg
+              if (encL < 1) userSettings.promptTooSmall = true;
             }
           }
         }
@@ -257,7 +286,10 @@ export const generateResponse = async (
         });
 
         // Remove any "Thinking..." prompt
-        if (context[context.length - 1].role === 'assistant' && context[context.length - 1].content === 'Thinking...') {
+        if (
+          context[context.length - 1].role === "assistant" &&
+          context[context.length - 1].content === "Thinking..."
+        ) {
           context.pop();
         }
 
@@ -275,9 +307,12 @@ export const generateResponse = async (
             return callbackError("Missing system in customSettings");
           if (typeof data.customSettings.system !== "string")
             return callbackError("Invalid system, must be a string");
-          if (!data.customSettings.temp) return callbackError("Missing temp in customSettings");
+          if (!data.customSettings.temp)
+            return callbackError("Missing temp in customSettings");
           if (typeof data.customSettings.temp !== "number")
-            return callbackError("Invalid temp in customSettings, must be a number");
+            return callbackError(
+              "Invalid temp in customSettings, must be a number"
+            );
           bot = prompts.get("helper");
           fetchedPrompt = data.customSettings.system;
           bot.temp = data.customSettings.temp;
@@ -304,12 +339,16 @@ export const generateResponse = async (
             ? prompts.values().next().value.prompt // Fetch the first prompt
             : fetchedPrompt,
           context,
-          Object.assign({
+          {
             temp:
               bot !== undefined && bot?.temp !== undefined
                 ? bot?.temp ?? 0.7
                 : 0.7,
-          }, bot),
+            isFirstMessageSystem:
+              bot !== undefined && bot?.isFirstMessageSystem !== undefined
+                ? bot?.isFirstMessageSystem
+                : true,
+          },
           function (r) {
             if (r?.error && r?.error === true) {
               callbackData({ error: true, errorMessage: r.message });
@@ -386,6 +425,9 @@ export function log(...message) {
     `${year}-${month}-${day}_${hour}.log`
   );
   const logMessage = `[${now.toISOString()}] ${message}\n`;
+
+  // log to console!
+  process.stdout.write(logMessage);
 
   fs.appendFile(filename, logMessage, (err) => {
     if (err) {
