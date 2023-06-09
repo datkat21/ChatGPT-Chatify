@@ -481,6 +481,8 @@ window.addEventListener("load", async function () {
         userSettings.theme === "clean-dark"
       )
         userSettings.theme = "azure";
+      // Update old settings promptPrefix = false -> promptPrefix = ''
+      if (us.promptPrefix === false) userSettings["promptPrefix"] = "";
 
       document.documentElement.dataset.theme = userSettings.theme;
       document.documentElement.dataset.chatViewType = userSettings.chatViewType;
