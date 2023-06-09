@@ -1,6 +1,6 @@
 # Chatify for the ChatGPT API
 
-![](assets/user-interface.png.png)
+![](assets/user-interface.png)
 
 Chatify is a simple web front-end and back-end for ChatGPT! **Requires OpenAI API key, view instructions to set up.**
 
