@@ -160,29 +160,25 @@ app.get("/api/usage", (req, res) => {
   });
 });
 
-const ver = "v0.5.0";
+const ver = "v0.5.1";
 const sub = "(customization update)";
 let newFeatures =
   "<ul>" +
   [
-    "User settings modal is now complete and functional",
-    "Selecting a new prompt provides a random predetermined greeting",
-    "Updated server-side dashboard",
-    "Type messages while the AI is responding",
-    "Stop text generation",
-    "Automatic date/time recognition based on your time zone",
-    '<p>This project is <a target="_blank" href="https://github.com/datkat21/ChatGPT-Chatify">open-source on GitHub</a>!</p>',
+    "A few brand new color themes",
+    "More customization options",
+    "(Hopefully) fixed most server side crashing issues",
   ]
     .map((f) => `<li>${f}</li>`)
-    .join("<br>") +
+    .join("\n") +
   "</ul>";
 app.get("/api/version", (req, res) => {
   // You can set any message or whatever if you make codebase changes
   res.json({
     version: ver,
     substring: sub,
-    changelog: `<h2>Chatify ${ver}</h2><b>This update is still being worked on! Some features are currently not available.</b>${newFeatures}`,
-    footerNote: `<p class="mt-0">Chatify-AI ${ver} ${sub}.<br>Built with the ChatGPT API.<br><b>Note: Conversation logs are stored.</b><br>See our <a target="_blank" href="/usage-terms">usage policy</a>.</p>`,
+    changelog: `<h2>Chatify ${ver}</h2>This update includes:${newFeatures}<br>This project is <a target="_blank" href="https://github.com/datkat21/ChatGPT-Chatify">open-source on GitHub</a>!`,
+    footerNote: `<p class="mt-0">Chatify-AI ${ver} ${sub}.<br>Built with the ChatGPT API.<br><b>This instance uses the Dashboard.</b><br>See our <a target="_blank" href="/usage-terms">usage policy</a>.</p>`,
   });
 });
 

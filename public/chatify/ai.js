@@ -309,6 +309,8 @@ window.addEventListener("load", async function () {
       '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>',
     stop: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg>',
     send: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>',
+    retry:
+      '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-cw"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>',
   };
 
   let apiUsage = {
@@ -328,6 +330,9 @@ window.addEventListener("load", async function () {
   }
 
   await checkRequests();
+
+  let lastScrollTop = -1;
+  let lastScrollHeight = -1;
 
   const OPENAI_URL_WS = `${location.protocol.replace("http", "ws")}//${
     location.host
@@ -355,6 +360,8 @@ window.addEventListener("load", async function () {
     .attr({ type: "text", placeholder: "Message", rows: "1" })
     .style({ resize: "vertical", "min-height": "34px" })
     .appendTo(inputAreaWrapper);
+
+  inputArea.style({ height: "35px" });
 
   const sendButton = new Html("button")
     .html(ICONS.send)
@@ -438,6 +445,66 @@ window.addEventListener("load", async function () {
       settingsContainer.classOff("mw-0");
     }
   });
+
+  let userSettings = {
+    promptPrefix: "", // string | false, if 0 char is false
+    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || false,
+    theme: "clean-dark",
+    username: "User",
+    includeUsername: false,
+    rememberContext: false,
+    chatViewType: "cozy",
+    showAvatars: true,
+    showNames: true,
+  };
+
+  function loadUserSettings() {
+    try {
+      let us = JSON.parse(localStorage.getItem("user-settings"));
+
+      if (us.promptPrefix !== undefined)
+        userSettings["promptPrefix"] = us.promptPrefix;
+      if (us.timeZone !== undefined) userSettings["timeZone"] = us.timeZone;
+      if (us.theme !== undefined) userSettings["theme"] = us.theme;
+      if (us.username !== undefined) userSettings["username"] = us.username;
+      if (us.includeUsername !== undefined)
+        userSettings["includeUsername"] = us.includeUsername;
+      if (us.chatViewType !== undefined)
+        userSettings["chatViewType"] = us.chatViewType;
+      if (us.showAvatars !== undefined)
+        userSettings["showAvatars"] = us.showAvatars;
+      if (us.showNames !== undefined) userSettings["showNames"] = us.showNames;
+
+      // Update old settings 'clean-dark' -> 'azure'
+      if (
+        userSettings.theme !== undefined &&
+        userSettings.theme === "clean-dark"
+      )
+        userSettings.theme = "azure";
+
+      document.documentElement.dataset.theme = userSettings.theme;
+      document.documentElement.dataset.chatViewType = userSettings.chatViewType;
+
+      document.documentElement.dataset.showAvatars = userSettings.showAvatars;
+      document.documentElement.dataset.showNames = userSettings.showNames;
+    } catch (e) {}
+  }
+
+  loadUserSettings();
+
+  window.addEventListener("storage", (e) => {
+    loadUserSettings();
+    window.dispatchEvent(
+      new CustomEvent("chatify-settings-update", {
+        detail: { data: e.newValue },
+      })
+    );
+  });
+
+  // Function to save the current user settings to local storage
+  function saveUserSettings() {
+    localStorage.setItem("user-settings", JSON.stringify(userSettings));
+  }
 
   const prompts = await fetch("/api/prompts").then((j) => j.json());
 
@@ -945,44 +1012,6 @@ window.addEventListener("load", async function () {
       modal.show();
     });
 
-  let userSettings = {
-    promptPrefix: "", // string | false, if 0 char is false
-    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || false,
-    theme: "clean-dark",
-    username: "User",
-    includeUsername: false,
-    rememberContext: false,
-    chatViewType: "cozy",
-  };
-
-  function loadUserSettings() {
-    try {
-      let us = JSON.parse(localStorage.getItem("user-settings"));
-
-      if (us !== null && us.promptPrefix !== null && us.timeZone !== null)
-        userSettings = us;
-
-      document.documentElement.dataset.theme = userSettings.theme;
-      document.documentElement.dataset.chatViewType = userSettings.chatViewType;
-    } catch (e) {}
-  }
-
-  loadUserSettings();
-
-  window.addEventListener("storage", (e) => {
-    loadUserSettings();
-    window.dispatchEvent(
-      new CustomEvent("chatify-settings-update", {
-        detail: { data: e.newValue },
-      })
-    );
-  });
-
-  // Function to save the current user settings to local storage
-  function saveUserSettings() {
-    localStorage.setItem("user-settings", JSON.stringify(userSettings));
-  }
-
   const userSettingsBtn = new Html("button")
     .text("Settings")
     .class("fg")
@@ -1058,6 +1087,57 @@ window.addEventListener("load", async function () {
         .text("Experimental: Remember context better")
         .appendTo(settings_rememberContextWrapper);
 
+      // Appearance checkboxes
+
+      // Checkboxes
+      const settings_AppearanceContentWrapper = new Html("span");
+
+      const settings_showAvatarsWrapper = new Html("span")
+        .appendTo(settings_AppearanceContentWrapper)
+        .classOn("row");
+
+      const settings_showAvatarsCheckbox = new Html("input")
+        .attr({
+          id: "sha",
+          type: "checkbox",
+          checked: userSettings.showAvatars === true ? true : undefined,
+        })
+        .on("input", (e) => {
+          document.documentElement.dataset.showAvatars = e.target.checked;
+          userSettings.showAvatars = e.target.checked;
+          saveUserSettings();
+        })
+        .appendTo(settings_showAvatarsWrapper);
+      new Html("label")
+        .attr({
+          for: "sha",
+        })
+        .text("Show avatars next to messages")
+        .appendTo(settings_showAvatarsWrapper);
+
+      const settings_showNamesWrapper = new Html("span")
+        .appendTo(settings_AppearanceContentWrapper)
+        .classOn("row", "pt-0", "pb-0");
+
+      const settings_showNamesCheckbox = new Html("input")
+        .attr({
+          id: "shn",
+          type: "checkbox",
+          checked: userSettings.showNames === true ? true : undefined,
+        })
+        .on("input", (e) => {
+          document.documentElement.dataset.showNames = e.target.checked;
+          userSettings.showNames = e.target.checked;
+          saveUserSettings();
+        })
+        .appendTo(settings_showNamesWrapper);
+      new Html("label")
+        .attr({
+          for: "shn",
+        })
+        .text("Show names next to messages")
+        .appendTo(settings_showNamesWrapper);
+
       const themeSelect = new Html("select")
         .appendMany(
           new Html("option").text("Dark").attr({
@@ -1072,9 +1152,25 @@ window.addEventListener("load", async function () {
             value: "amoled",
             selected: userSettings.theme === "amoled" ? true : undefined,
           }),
-          new Html("option").text("Clean Dark").attr({
-            value: "clean-dark",
-            selected: userSettings.theme === "clean-dark" ? true : undefined,
+          new Html("option").text("Azure").attr({
+            value: "azure",
+            selected: userSettings.theme === "azure" ? true : undefined,
+          }),
+          new Html("option").text("Orchid").attr({
+            value: "orchid",
+            selected: userSettings.theme === "orchid" ? true : undefined,
+          }),
+          new Html("option").text("Forest").attr({
+            value: "forest",
+            selected: userSettings.theme === "forest" ? true : undefined,
+          }),
+          new Html("option").text("Maroon").attr({
+            value: "maroon",
+            selected: userSettings.theme === "maroon" ? true : undefined,
+          }),
+          new Html("option").text("Violet").attr({
+            value: "violet",
+            selected: userSettings.theme === "violet" ? true : undefined,
           })
         )
         .on("input", (e) => {
@@ -1097,6 +1193,11 @@ window.addEventListener("load", async function () {
             value: "bubbles",
             selected:
               userSettings.chatViewType === "bubbles" ? true : undefined,
+          }),
+          new Html("option").text("Flat Bubbles").attr({
+            value: "flat-bubbles",
+            selected:
+              userSettings.chatViewType === "flat-bubbles" ? true : undefined,
           })
         )
         .on("input", (e) => {
@@ -1128,7 +1229,8 @@ window.addEventListener("load", async function () {
             new Html("span").classOn("pb-2", "flex").text("Theme"),
             themeSelect,
             new Html("span").classOn("pb-2", "pt-2", "flex").text("Chat Style"),
-            chatSelect
+            chatSelect,
+            settings_AppearanceContentWrapper
           ),
           new Html("fieldset").appendMany(
             new Html("legend").text("Chatbot Settings"),
@@ -1138,12 +1240,18 @@ window.addEventListener("load", async function () {
         );
 
       window.addEventListener("chatify-settings-update", function (e) {
+        // Personalization
         usernameInput.elm.value = userSettings.username;
         settings_enableUserName.elm.checked = userSettings.includeUsername;
         settings_rememberContextCheckbox.elm.checked =
           userSettings.rememberContext;
+        // Appearance
         themeSelect.elm.value = userSettings.theme;
+        settings_showAvatarsCheckbox.elm.checked = userSettings.showAvatars;
+        settings_showNamesCheckbox.elm.checked = userSettings.showNames;
+
         chatSelect.elm.value = userSettings.chatViewType;
+        // Chatbot Settings
         promptPrefixBox.elm.value = userSettings.promptPrefix;
       });
 
@@ -1280,7 +1388,6 @@ window.addEventListener("load", async function () {
   }
 
   function updateState() {
-    console.log(isTyping);
     switch (isTyping) {
       case true:
         inputArea.attr({ placeholder: "Thinking..." });
@@ -1619,6 +1726,8 @@ window.addEventListener("load", async function () {
 
     const prompt = prompts.find((p) => p.id === select.elm.value) || prompts[0];
 
+    console.log(messageHistory[aiIndex], prompt);
+
     let human;
     if (addUserMessage === true) {
       human = makeMessage(0, DOMPurify.sanitize(marked.parse(text)), userIndex);
@@ -1650,11 +1759,6 @@ window.addEventListener("load", async function () {
 
   function scrollDown() {
     var chatWindow = messagesContainer.elm;
-    console.log(
-      chatWindow.scrollHeight,
-      chatWindow.offsetHeight,
-      document.documentElement.offsetHeight
-    );
     chatWindow.scrollTop = chatWindow.scrollHeight;
   }
 

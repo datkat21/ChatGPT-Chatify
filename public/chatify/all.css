@@ -82,7 +82,29 @@ body {
   --separator: #fff !important;
   --code-block: #000;
 }
-:root[data-theme="clean-dark"] {
+:root[data-theme="forest"] {
+  --accent: hsl(118, 80%, 40%);
+  --meter: hsl(118, 80%, 40%);
+  --input-background-color: hsl(118, 26%, 11%);
+  --input-border: hsl(118, 23%, 22%);
+  --button-background-color: hsl(118, 35%, 25%);
+  --button-neutral-color: #50505041;
+  --button-transparent-color: #50505000;
+  --button-danger-color: #4b1212;
+  --text-color: #ffffff;
+  --background-default: hsl(118, 25%, 8%);
+  --background-dim: hsl(118, 31%, 5%);
+  --background-dimmer: hsl(118, 31%, 5%);
+  --transparent-border: hsl(118, 23%, 22%);
+  --background-light: hsl(118, 28%, 12%);
+  --tab-selector: hsl(118, 25%, 8%);
+  --tab-selected: hsl(118, 35%, 25%);
+  --transparent-border-alt: hsl(118, 23%, 22%);
+  --text-color-accent: hsl(118, 43%, 72%);
+  --separator: hsl(118, 43%, 72%);
+  --code-block: hsl(118, 33%, 17%);
+}
+:root[data-theme="azure"] {
   --accent: #1445b8;
   --meter: #1445b8;
   --input-background-color: #141822;
@@ -103,6 +125,72 @@ body {
   --text-color-accent: #99acd6;
   --separator: #99acd6;
   --code-block: rgb(30 41 59);
+}
+:root[data-theme="orchid"] {
+  --accent: hsl(260, 80%, 40%);
+  --meter: hsl(260, 80%, 40%);
+  --input-background-color: hsl(260, 26%, 11%);
+  --input-border: hsl(260, 23%, 22%);
+  --button-background-color: hsl(260, 35%, 25%);
+  --button-neutral-color: #50505041;
+  --button-transparent-color: #50505000;
+  --button-danger-color: #4b1212;
+  --text-color: #ffffff;
+  --background-default: hsl(260, 25%, 8%);
+  --background-dim: hsl(260, 31%, 5%);
+  --background-dimmer: hsl(260, 31%, 5%);
+  --transparent-border: hsl(260, 23%, 22%);
+  --background-light: hsl(260, 28%, 12%);
+  --tab-selector: hsl(260, 25%, 8%);
+  --tab-selected: hsl(260, 35%, 25%);
+  --transparent-border-alt: hsl(260, 23%, 22%);
+  --text-color-accent: hsl(260, 43%, 72%);
+  --separator: hsl(260, 43%, 72%);
+  --code-block: hsl(260, 33%, 17%);
+}
+:root[data-theme="maroon"] {
+  --accent: hsl(2, 80%, 40%);
+  --meter: hsl(2, 80%, 40%);
+  --input-background-color: hsl(2, 26%, 11%);
+  --input-border: hsl(2, 23%, 22%);
+  --button-background-color: hsl(2, 35%, 25%);
+  --button-neutral-color: #50505041;
+  --button-transparent-color: #50505000;
+  --button-danger-color: #4b1212;
+  --text-color: #ffffff;
+  --background-default: hsl(2, 25%, 8%);
+  --background-dim: hsl(2, 31%, 5%);
+  --background-dimmer: hsl(2, 31%, 5%);
+  --transparent-border: hsl(2, 23%, 22%);
+  --background-light: hsl(2, 28%, 12%);
+  --tab-selector: hsl(2, 25%, 8%);
+  --tab-selected: hsl(2, 35%, 25%);
+  --transparent-border-alt: hsl(2, 23%, 22%);
+  --text-color-accent: hsl(2, 43%, 72%);
+  --separator: hsl(2, 43%, 72%);
+  --code-block: hsl(2, 33%, 17%);
+}
+:root[data-theme="violet"] {
+  --accent: hsl(240, 80%, 40%);
+  --meter: hsl(240, 80%, 40%);
+  --input-background-color: hsl(240, 26%, 11%);
+  --input-border: hsl(240, 23%, 22%);
+  --button-background-color: hsl(240, 35%, 25%);
+  --button-neutral-color: #50505041;
+  --button-transparent-color: #50505000;
+  --button-danger-color: #4b1212;
+  --text-color: #ffffff;
+  --background-default: hsl(240, 25%, 8%);
+  --background-dim: hsl(240, 31%, 5%);
+  --background-dimmer: hsl(240, 31%, 5%);
+  --transparent-border: hsl(240, 23%, 22%);
+  --background-light: hsl(240, 28%, 12%);
+  --tab-selector: hsl(240, 25%, 8%);
+  --tab-selected: hsl(240, 35%, 25%);
+  --transparent-border-alt: hsl(240, 23%, 22%);
+  --text-color-accent: hsl(240, 43%, 72%);
+  --separator: hsl(240, 43%, 72%);
+  --code-block: hsl(240, 33%, 17%);
 }
 
 .badge {
@@ -137,7 +225,7 @@ body > .messages-wrapper > .messages {
 
 body > .messages-wrapper > .messages > .message {
   display: flex;
-  padding: 16px 4vmax;
+  padding: 16px 2.5vmax;
   background-color: var(--background-default);
   gap: 16px;
   font-size: 16px;
@@ -160,8 +248,12 @@ body > .messages-wrapper > .messages > .message .data > .name {
   text-transform: uppercase;
 }
 
+body > .messages-wrapper > .messages > .message .data > .name {
+  margin: 7px 0;
+  line-height: 1em;
+}
 body > .messages-wrapper > .messages > .message .data > .text {
-  margin: 7px 0px;
+  margin: 0px;
   min-height: 20px;
 }
 
@@ -904,22 +996,55 @@ del::after {
   margin: 0 !important;
 }
 
-[data-chat-view-type="bubbles"] .message {
+[data-chat-view-type="bubbles"] .message,
+[data-chat-view-type="flat-bubbles"] .message {
   padding: 0 3vmax !important;
   background-color: transparent !important;
 }
-[data-chat-view-type="bubbles"] .message.user > .wrapper {
+[data-chat-view-type="bubbles"] .message.user > .wrapper,
+[data-chat-view-type="flat-bubbles"] .message.user > .wrapper {
   flex-direction: row-reverse;
   text-align: right;
+}
+code,
+pre {
+  text-align: left !important;
 }
 [data-chat-view-type="bubbles"] .message > .wrapper .text {
   display: inline-block;
   padding: 4px 16px;
   border-radius: 6px;
 }
+[data-chat-view-type="flat-bubbles"] .message > .wrapper .text {
+  display: inline-block;
+  padding: 4px 16px;
+  border-radius: 6px;
+  border-style: solid;
+  border-width: 1px;
+}
+
 [data-chat-view-type="bubbles"] .message.gpt > .wrapper .text {
   background-color: var(--accent);
 }
-[data-chat-view-type="bubbles"] .message.user > .wrapper .text {
+[data-chat-view-type="bubb es"] .message.user > .wrapper .text {
   background-color: var(--background-light);
+}
+
+[data-chat-view-type="flat-bubbles"] .message.gpt > .wrapper .text {
+  border-color: var(--accent);
+}
+[data-chat-view-type="flat-bubbles"] .message.user > .wrapper .text {
+  border-color: var(--background-light);
+}
+
+[data-show-names="false"] .message > .wrapper > .data > .name {
+  display: none;
+}
+[data-show-avatars="false"] .message > .wrapper > .icon {
+  display: none;
+}
+
+[data-chat-view-type="bubbles"] .message,
+[data-chat-view-type="flat-bubbles"] .message {
+  margin: 7px 0 !important;
 }
