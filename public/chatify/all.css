@@ -1024,14 +1024,14 @@ pre {
 }
 
 [data-chat-view-type="bubbles"] .message.gpt > .wrapper .text {
-  background-color: var(--accent);
+  background-color: var(--button-background-color);
 }
-[data-chat-view-type="bubb es"] .message.user > .wrapper .text {
+[data-chat-view-type="bubbles"] .message.user > .wrapper .text {
   background-color: var(--background-light);
 }
 
 [data-chat-view-type="flat-bubbles"] .message.gpt > .wrapper .text {
-  border-color: var(--accent);
+  border-color: var(--button-background-color);
 }
 [data-chat-view-type="flat-bubbles"] .message.user > .wrapper .text {
   border-color: var(--background-light);
