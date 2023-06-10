@@ -1173,7 +1173,11 @@ window.addEventListener("load", async function () {
           new Html("option").text("Violet").attr({
             value: "violet",
             selected: userSettings.theme === "violet" ? true : undefined,
-          })
+          }),
+          new Html("option").text("Tangerine").attr({
+            value: "tangerine",
+            selected: userSettings.theme === "tangerine" ? true : undefined,
+          }),
         )
         .on("input", (e) => {
           document.documentElement.dataset.theme = e.target.value;

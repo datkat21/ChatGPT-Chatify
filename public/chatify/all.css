@@ -192,6 +192,28 @@ body {
   --separator: hsl(240, 43%, 72%);
   --code-block: hsl(240, 33%, 17%);
 }
+:root[data-theme="tangerine"] {
+  --accent: hsl(30, 80%, 40%);
+  --meter: hsl(30, 80%, 40%);
+  --input-background-color: hsl(30, 26%, 11%);
+  --input-border: hsl(30, 23%, 22%);
+  --button-background-color: hsl(30, 35%, 25%);
+  --button-neutral-color: #50505041;
+  --button-transparent-color: #50505000;
+  --button-danger-color: #4b1212;
+  --text-color: #ffffff;
+  --background-default: hsl(30, 25%, 8%);
+  --background-dim: hsl(30, 31%, 5%);
+  --background-dimmer: hsl(30, 31%, 5%);
+  --transparent-border: hsl(30, 23%, 22%);
+  --background-light: hsl(30, 28%, 12%);
+  --tab-selector: hsl(30, 25%, 8%);
+  --tab-selected: hsl(30, 35%, 25%);
+  --transparent-border-alt: hsl(30, 23%, 22%);
+  --text-color-accent: hsl(30, 43%, 72%);
+  --separator: hsl(30, 43%, 72%);
+  --code-block: hsl(30, 33%, 17%);
+}
 
 .badge {
   padding: 4px 8px;
