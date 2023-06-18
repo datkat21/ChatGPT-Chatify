@@ -140,14 +140,14 @@ app.get("/hdr", (req, res) => {
 app.use("/api", express.json());
 
 // TODO: Untested route, commenting out for now.
-app.post("/api/count", (req, res) => {
-  console.log(req.body);
-  if (req.body && req.body.message && typeof req.body.message === "string") {
-    res.json(encodedLengths([{ role: "user", content: req.body.message }]));
-  } else {
-    res.status(400).send("missing req.body??");
-  }
-});
+// app.post("/api/count", (req, res) => {
+//   console.log(req.body);
+//   if (req.body && req.body.message && typeof req.body.message === "string") {
+//     res.json(encodedLengths([{ role: "user", content: req.body.message }]));
+//   } else {
+//     res.status(400).send("missing req.body??");
+//   }
+// });
 
 app.get("/api/usage", (req, res) => {
   const ip = getIp(req);
@@ -442,7 +442,7 @@ Long code block testing
         res.write(`data: {"type":"done"}\n
     `);
         console.log('Sent done');
-        res.end(); // WHY DOES END NOT WORK
+        res.end();
       }
     }, randomTime());
 
