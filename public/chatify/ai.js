@@ -171,26 +171,84 @@ window.addEventListener("load", async function () {
     }
   }
 
-  function colorContrast(color) {
-    l = (c) => {
-      h = (c) => {
-        if (c.length === 3)
-          c =
-            c.charAt(0) +
-            c.charAt(0) +
-            c.charAt(1) +
-            c.charAt(1) +
-            c.charAt(2) +
-            c.charAt(2);
-        else if (c.length !== 6) throw "Invalid hex color: " + c;
-        var r = [];
-        for (var i = 0; i <= 2; i++) r[i] = parseInt(c.substr(i * 2, 2), 16);
-        return r;
-      };
-      var r = typeof c === "string" ? h(c) : c;
-      return 0.2126 * r[0] + 0.7152 * r[1] + 0.0722 * r[2];
-    };
-    return l(color) >= 165 ? "000" : "fff";
+  function parseMarkdown(text) {
+    let inCodeBlock = false; // flag to track if we're inside a code block
+    let parsedText = '';
+
+    // Split the text into lines
+    const lines = text.split('\n');
+
+    // Loop through each line
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+
+      // Check if we're inside a code block
+      if (inCodeBlock) {
+        // If we're inside a code block, check if this line ends the block
+        if (line.trim() === '```') {
+          inCodeBlock = false;
+          parsedText += '</code></pre>';
+        } else {
+          // If we're still inside the code block, add the line to the parsed text
+          parsedText += line + '\n';
+        }
+      } else {
+        // If we're not inside a code block, check if this line starts a code block
+        if (line.trim().startsWith('```')) {
+          inCodeBlock = true;
+          const language = line.trim().slice(3);
+          parsedText += `<pre><code class="language-${language}">`;
+        } else {
+          // If we're not inside a code block, parse the line as normal markdown
+          parsedText += parseMarkdownLine(line) + '\n';
+        }
+      }
+    }
+
+    // If we're still inside a code block at the end of the text, close it
+    if (inCodeBlock) {
+      parsedText += '</code></pre>';
+    }
+
+    const codeTags = parsedText.match(/<code.+?class="language-(.*?)".*?>[\s\S]+?<\/code>/gim) || [];
+    for (let i = 0; i < codeTags.length; i++) {
+      const elem = document.createElement('div');
+      elem.innerHTML = codeTags[i];
+      const code = elem.textContent;
+      const lang = codeTags[i].match(/class="language-([^"]+)"/i);
+      const language = lang ? lang[1] : 'plaintext';
+      const highlightedCode = hljs.highlight(code, { language }).value;
+      parsedText = parsedText.replace(codeTags[i], `<code class="language-${language}">${highlightedCode}</code>`);
+    }
+    return parsedText;
+  }
+
+  function parseMarkdownLine(line) {
+    // Headers
+    line = line.replace(/^# (.+)/gm, '<h1>$1</h1>');
+    line = line.replace(/^## (.+)/gm, '<h2>$1</h2>');
+    line = line.replace(/^### (.+)/gm, '<h3>$1</h3>');
+    line = line.replace(/^#### (.+)/gm, '<h4>$1</h4>');
+    line = line.replace(/^##### (.+)/gm, '<h5>$1</h5>');
+    line = line.replace(/^###### (.+)/gm, '<h6>$1</h6>');
+
+    // Bold and italic
+    line = line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    line = line.replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+    // Links
+    line = line.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>');
+
+    // Images
+    line = line.replace(/!\[(.+?)\]\((.+?)\)/g, '<img src="$2" alt="$1">');
+
+    // Inline code
+    line = line.replace(/`(.+?)`/g, '<code>$1</code>');
+
+    // Paragraphs
+    line = '<p>' + line + '</p>';
+
+    return line;
   }
 
   function toSnakeCase(name) {
@@ -291,7 +349,7 @@ window.addEventListener("load", async function () {
       cb();
       const btn_modalContent = new Html("div").html(
         "Failed to load prompt. Please make sure it is a valid JSON string!<br>Error code: " +
-          e
+        e
       );
 
       const btn_modal = new Modal(btn_modalContent);
@@ -334,9 +392,7 @@ window.addEventListener("load", async function () {
   let lastScrollTop = -1;
   let lastScrollHeight = -1;
 
-  const OPENAI_URL_WS = `${location.protocol.replace("http", "ws")}//${
-    location.host
-  }`;
+  const OPENAI_URL_WS = `${location.protocol.replace("http", "ws")}//${location.host}/stream`;
   let messageHistory = [];
 
   const settingsContainer = new Html().class("config").appendTo("body");
@@ -386,7 +442,7 @@ window.addEventListener("load", async function () {
     if (confirm("Are you sure you want to clear your history?")) {
       try {
         sendButton_StopGeneration();
-      } catch {}
+      } catch { }
       actuallyClearMessageHistory();
     }
   }
@@ -456,6 +512,7 @@ window.addEventListener("load", async function () {
     chatViewType: "cozy",
     showAvatars: true,
     showNames: true,
+    testMode: false,
   };
 
   function loadUserSettings() {
@@ -474,6 +531,7 @@ window.addEventListener("load", async function () {
       if (us.showAvatars !== undefined)
         userSettings["showAvatars"] = us.showAvatars;
       if (us.showNames !== undefined) userSettings["showNames"] = us.showNames;
+      if (us.testMode !== undefined) userSettings["testMode"] = us.testMode;
 
       // Update old settings 'clean-dark' -> 'azure'
       if (
@@ -489,7 +547,7 @@ window.addEventListener("load", async function () {
 
       document.documentElement.dataset.showAvatars = userSettings.showAvatars;
       document.documentElement.dataset.showNames = userSettings.showNames;
-    } catch (e) {}
+    } catch (e) { }
   }
 
   loadUserSettings();
@@ -681,7 +739,7 @@ window.addEventListener("load", async function () {
       if (prp.greetingMessages && Array.isArray(prp.greetingMessages)) {
         const m =
           prp.greetingMessages[
-            Math.floor(Math.random() * prp.greetingMessages.length)
+          Math.floor(Math.random() * prp.greetingMessages.length)
           ];
         const index =
           messageHistory.push({
@@ -917,7 +975,7 @@ window.addEventListener("load", async function () {
                                       if (
                                         m.type === "custom" ||
                                         prompts.find((p) => p.id === m.type) !==
-                                          undefined
+                                        undefined
                                       ) {
                                         return true;
                                       }
@@ -934,7 +992,7 @@ window.addEventListener("load", async function () {
                                   const item = items[i];
                                   setPrompt(
                                     prompts.find((p) => p.id === item.type) ||
-                                      prompts[0],
+                                    prompts[0],
                                     false
                                   );
 
@@ -942,18 +1000,18 @@ window.addEventListener("load", async function () {
                                     item.role === "assistant"
                                       ? item.type === "custom"
                                         ? {
-                                            label: "Custom (unknown)",
-                                            id: "custom",
-                                            greeting: "Unset",
-                                            hint: "Unset",
-                                            type: "builtIn",
-                                            avatar:
-                                              "./assets/avatars/builtin/custom.svg",
-                                            displayName: "Custom (unknown)",
-                                          }
+                                          label: "Custom (unknown)",
+                                          id: "custom",
+                                          greeting: "Unset",
+                                          hint: "Unset",
+                                          type: "builtIn",
+                                          avatar:
+                                            "./assets/avatars/builtin/custom.svg",
+                                          displayName: "Custom (unknown)",
+                                        }
                                         : prompts.find(
-                                            (p) => p.id === item.type
-                                          )
+                                          (p) => p.id === item.type
+                                        )
                                       : item.name ?? "User";
 
                                   let m = makeMessage(
@@ -968,7 +1026,8 @@ window.addEventListener("load", async function () {
                                   } else {
                                     m.query(".data .text").innerHTML =
                                       DOMPurify.sanitize(
-                                        marked.parse(item.content)
+                                        parseMarkdown(item.content)
+                                        // marked.parse(item.content)
                                       );
                                   }
 
@@ -1140,6 +1199,31 @@ window.addEventListener("load", async function () {
         .text("Show names next to messages")
         .appendTo(settings_showNamesWrapper);
 
+      const settings_ChatbotSettingsContentWrapper = new Html("span");
+
+      const settings_testModeWrapper = new Html("span")
+        .appendTo(settings_ChatbotSettingsContentWrapper)
+        .class('pb-0')
+        .classOn("row");
+
+      const settings_testModeCheckbox = new Html("input")
+        .attr({
+          id: "tem",
+          type: "checkbox",
+          checked: userSettings.testMode === true ? true : undefined,
+        })
+        .on("input", (e) => {
+          userSettings.testMode = e.target.checked;
+          saveUserSettings();
+        })
+        .appendTo(settings_testModeWrapper);
+      new Html("label")
+        .attr({
+          for: "tem",
+        })
+        .text("Enable Test Mode (fake responses for debugging)")
+        .appendTo(settings_testModeWrapper);
+
       const themeSelect = new Html("select")
         .appendMany(
           new Html("option").text("Dark").attr({
@@ -1154,6 +1238,22 @@ window.addEventListener("load", async function () {
             value: "amoled",
             selected: userSettings.theme === "amoled" ? true : undefined,
           }),
+          new Html("option").text("Maroon").attr({
+            value: "maroon",
+            selected: userSettings.theme === "maroon" ? true : undefined,
+          }),
+          new Html("option").text("Tangerine").attr({
+            value: "tangerine",
+            selected: userSettings.theme === "tangerine" ? true : undefined,
+          }),
+          new Html("option").text("Lemon").attr({
+            value: "lemon",
+            selected: userSettings.theme === "lemon" ? true : undefined,
+          }),
+          new Html("option").text("Forest").attr({
+            value: "forest",
+            selected: userSettings.theme === "forest" ? true : undefined,
+          }),
           new Html("option").text("Azure").attr({
             value: "azure",
             selected: userSettings.theme === "azure" ? true : undefined,
@@ -1162,21 +1262,9 @@ window.addEventListener("load", async function () {
             value: "orchid",
             selected: userSettings.theme === "orchid" ? true : undefined,
           }),
-          new Html("option").text("Forest").attr({
-            value: "forest",
-            selected: userSettings.theme === "forest" ? true : undefined,
-          }),
-          new Html("option").text("Maroon").attr({
-            value: "maroon",
-            selected: userSettings.theme === "maroon" ? true : undefined,
-          }),
           new Html("option").text("Violet").attr({
             value: "violet",
             selected: userSettings.theme === "violet" ? true : undefined,
-          }),
-          new Html("option").text("Tangerine").attr({
-            value: "tangerine",
-            selected: userSettings.theme === "tangerine" ? true : undefined,
           }),
         )
         .on("input", (e) => {
@@ -1241,7 +1329,9 @@ window.addEventListener("load", async function () {
           new Html("fieldset").appendMany(
             new Html("legend").text("Chatbot Settings"),
             new Html("span").classOn("pb-2", "flex").text("Prompt prefix"),
-            promptPrefixBox
+            promptPrefixBox,
+            new Html("span").classOn("pt-2", "flex").text("Test Mode"),
+            settings_ChatbotSettingsContentWrapper
           )
         );
 
@@ -1255,10 +1345,10 @@ window.addEventListener("load", async function () {
         themeSelect.elm.value = userSettings.theme;
         settings_showAvatarsCheckbox.elm.checked = userSettings.showAvatars;
         settings_showNamesCheckbox.elm.checked = userSettings.showNames;
-
         chatSelect.elm.value = userSettings.chatViewType;
         // Chatbot Settings
         promptPrefixBox.elm.value = userSettings.promptPrefix;
+        settings_testModeCheckbox.elm.checked = userSettings.testMode;
       });
 
       // Show the settings modal
@@ -1333,6 +1423,7 @@ window.addEventListener("load", async function () {
     smartypants: false,
     xhtml: false,
     highlight: function (code, lang) {
+      console.log('marked hljs called');
       const language = hljs.getLanguage(lang) ? lang : "plaintext";
       return hljs.highlight(code, { language }).value;
     },
@@ -1416,16 +1507,9 @@ window.addEventListener("load", async function () {
     }
   }
 
-  function callAiStream(message, callback) {
-    currentSocket = io(`${OPENAI_URL_WS}`);
-    const socket = currentSocket;
-    let receivedInitMessage = false;
-    socket.on("connect", () => {
-      select.disabled = true;
-      const mh = messageHistory
-        .filter((m) => m !== null)
-        .slice(0, messageHistory.length - 1);
-      socket.emit("begin", {
+  async function callAiStream(message, callback) {
+    try {
+      const data = {
         user: userName,
         useUserName: userSettings.includeUsername,
         prompt: message,
@@ -1435,78 +1519,75 @@ window.addEventListener("load", async function () {
           system: customSettings_systemPrompt.elm.value,
         },
         rememberContext: userSettings.rememberContext,
-        context: mh,
+        context: messageHistory
+          .filter((m) => m !== null)
+          .slice(0, messageHistory.length - 1),
         userSettings: {
           timeZone: userSettings.timeZone,
           promptPrefix: userSettings.promptPrefix,
+          testMode: userSettings.testMode
         },
-      });
-    });
-    socket.on("recv", (event) => {
-      if (receivedInitMessage === false) {
-        // Save current conversation to localStorage with its set UUID
-      }
-      receivedInitMessage = true;
-      callback({ msg: event.data.replace(/\\n/g, "\n") });
-    });
-    socket.on("err", (event) => {
-      callback({
-        unfilteredMsg:
-          "<div id='AI_TEMP_ERR' class='error'>Something went wrong: " +
-          event.errorMessage +
-          "</div>",
-      });
-      const div = document.getElementById("AI_TEMP_ERR");
-      div.id = "";
-      return callback(true);
-    });
-    socket.on("done", () => {
-      socket.close();
-      callback(true);
-    });
-    let onErr = async (e) => {
-      console.log("[ERR!!]", e);
-      socket.close();
-      if (receivedInitMessage === false) {
-        receivedInitMessage = true; // idk this may prevent it from calling again
+      };
+
+      const options = {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+      };
+
+      const response = await fetch('/api/stream', options);
+      const stream = response.body;
+
+      const reader = stream.getReader();
+      let td = new TextDecoder();
+      let buffer = '';
+
+      reader.read().then(function processResult(result) {
+        if (result.done) {
+          return;
+        }
+        let r = td.decode(result.value);
+        console.log(result, r);
+        buffer += r.replace(/data:/g, ''); // add new data to buffer
+        const events = buffer.split(`\n
+`); // split buffer into individual events
+        buffer = events.pop(); // store incomplete event in buffer
+        for (const event of events) {
+          try {
+            const parsedEvent = JSON.parse(event);
+            if (parsedEvent.type === 'done') {
+              // Around here it just seems to 
+              callback(true);
+              break;
+              return;
+            } else if (parsedEvent.type === 'inc') { // incoming
+              callback({ msg: parsedEvent.data.replace(/\\n/g, "\n") });
+            }
+          } catch (err) {
+            console.error(err);
+          }
+        }
+        return reader.read().then(processResult);
+      }).catch((err) => {
+        console.error(err);
         callback({
           unfilteredMsg:
-            "<div id='AI_TEMP_ERR' class='error'>Something went wrong, give me a moment..</div>",
+            `<div id='AI_TEMP_ERR' class='error'>Sorry, but there was an error while loading the response: ${err}</div>`,
         });
-        const div = AI_TEMP_ERR;
-        div.id = "";
-        const result = await fetch("/api/usage")
-          .then((j) => j.json())
-          .catch((e) => {
-            console.log("oops??", e);
-          });
-        try {
-          if (result !== undefined) {
-            div.innerHTML =
-              result.remaining === 0
-                ? "It looks like you ran out of available API requests.<br>Please try again in " +
-                  futureDate(new Date(result.expires)) +
-                  ", or ask the owner of this instance to update your plan."
-                : "Something went wrong. " + e;
-            console.error(e);
-          } else {
-            div.textContent +=
-              " Also, It looks like you lost connection. Would you care to refresh?";
-          }
-        } catch (e) {
-          div.textContent +=
-            " Also, It looks like you lost connection. Would you care to refresh?";
-        }
-        callback(true);
-      } else if (e === "io client disconnect") {
-        // Disconnected BUT if we were in the middle of typing just stop completely
-        callback(true);
-      }
-      select.disabled = false;
-    };
-    socket.on("disconnect", onErr);
-    socket.on("error", onErr);
-    socket.on("err", onErr);
+        // TODO: Figure out the error
+        return callback(true);
+      });
+    } catch (e) {
+      console.error(e);
+      callback({
+        unfilteredMsg:
+          `<div id='AI_TEMP_ERR' class='error'>Sorry, but there was an error while loading the response: ${e}</div>`,
+      });
+      // TODO: Figure out the error
+      return callback(true);
+    }
   }
 
   async function callAiMessage(ai, message) {
@@ -1538,7 +1619,7 @@ window.addEventListener("load", async function () {
         if (!r.msg) return console.log("?!");
         result += r.msg;
         ai.querySelector(".data .text").innerHTML = DOMPurify.sanitize(
-          marked.parse(result)
+          parseMarkdown(result)
         );
         scrollDown();
 
@@ -1701,7 +1782,7 @@ window.addEventListener("load", async function () {
       if (data.startsWith('"')) data = data.slice(1);
       if (data.endsWith('"')) data = data.slice(0, -1);
       messageRef.querySelector(".data .text").innerHTML = DOMPurify.sanitize(
-        marked.parse(data)
+        parseMarkdown(data)
       );
     }
   }
@@ -1736,7 +1817,7 @@ window.addEventListener("load", async function () {
 
     let human;
     if (addUserMessage === true) {
-      human = makeMessage(0, DOMPurify.sanitize(marked.parse(text)), userIndex);
+      human = makeMessage(0, DOMPurify.sanitize(parseMarkdown(text)), userIndex);
     }
     let ai = makeMessage(1, "", aiIndex, prompt);
 

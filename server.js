@@ -121,7 +121,8 @@ prompts.forEach((p, k) => {
     type: p.type || "builtIn",
     avatar: p.avatar || null,
     displayName: p.displayName || null,
-    prompt: p.prompt || null,
+    // With v0.5.3, I may give the option to disclose prompt to the end users.
+    // prompt: p.prompt || null,
     greetingMessages: p.greetingMessages || null,
   });
 });
@@ -135,17 +136,18 @@ app.get("/hdr", (req, res) => {
   res.json(req.headers);
 });
 
-// TODO: Untested route, commenting out for now.
-// app.post("/api/count", express.json, (req, res) => {
-//   console.log(req.body);
-//   if (req.body && req.body.message && typeof req.body.message === "string") {
-//     res.json(encodedLengths([{ role: "user", content: req.body.message }]));
-//   } else {
-//     res.status(400).send("missing req.body??");
-//   }
-// });
 
 app.use("/api", express.json());
+
+// TODO: Untested route, commenting out for now.
+app.post("/api/count", (req, res) => {
+  console.log(req.body);
+  if (req.body && req.body.message && typeof req.body.message === "string") {
+    res.json(encodedLengths([{ role: "user", content: req.body.message }]));
+  } else {
+    res.status(400).send("missing req.body??");
+  }
+});
 
 app.get("/api/usage", (req, res) => {
   const ip = getIp(req);
@@ -160,14 +162,16 @@ app.get("/api/usage", (req, res) => {
   });
 });
 
-const ver = "v0.5.1";
-const sub = "(customization update)";
+const ver = "v0.5.2";
+const sub = "(Customize & More)";
 let newFeatures =
   "<ul>" +
   [
-    "A few brand new color themes",
-    "More customization options",
-    "(Hopefully) fixed most server side crashing issues",
+    "A new theme - Lemon",
+    "Re-ordered themes so they are rainbow-colored",
+    "Completely migrated the slow and old Axios over to the new OpenAI beta Node.js API",
+    "Addded Test Mode so users can test streaming via the Chatify API",
+    "Alongside streaming, the Socket.IO and POST APIs will still be available for old applications, but their use is discouraged.",
   ]
     .map((f) => `<li>${f}</li>`)
     .join("\n") +
@@ -187,7 +191,6 @@ app.get("/usage-terms", (_req, res) => {
 });
 
 // Entrypoint
-
 app.use(Config.default.options.entryPoint, express.static("public/chatify"));
 
 // Dashboard
@@ -315,10 +318,6 @@ const errorHandler = (err, req, res, next) => {
   }
 };
 
-// Add middleware functions to the app
-app.use(handle404);
-app.use(errorHandler);
-
 function rateLimitSocket(sock) {
   if (rateLimit(getSocketioIp(sock)) === true) {
     setTimeout(() => {
@@ -378,6 +377,127 @@ io.on("connection", (sock) => {
 });
 
 log("Starting server...");
+
+
+function randomTime() {
+  return Math.floor(Math.random() * 15 + 20);
+}
+
+function sendPartialData(res, currentIndex, prewrittenMessage) {
+  const endIndex = Math.min(currentIndex + Math.floor(Math.random() * (5 - 3 + 1) + 3), prewrittenMessage.length);
+  const partialMessage = JSON.stringify({ type: 'inc', data: prewrittenMessage.slice(currentIndex, endIndex) });
+  res.write(`data: ${partialMessage}\n
+`);
+  return endIndex;
+}
+
+import { inspect } from "util";
+
+app.post('/api/stream', (req, res) => {
+  if (req.body && req.body.userSettings && req.body.userSettings.testMode && req.body.userSettings?.testMode === true) {
+    1
+    // Fake a server-side message instead of actually calling the AI
+    // (for event streaming testing)
+    let prewrittenMessage =
+      `Hello there, this is a pre-written message to test event streaming.
+
+Here's a trimmed summary of your request body:
+\`\`\`js
+${inspect(req.body, undefined, 1)}
+\`\`\`
+
+# Markdown testing
+
+*One*, **two**, ***three***! Hey, check [this](https://google.com) out!
+
+## Markdown again
+
+\`\`\`
+Long code block testing
+. . . 
+. . . 
+. . . 
+. . . 
+. . . 
+. . . 
+. . . 
+. . . 
+. . . 
+. . . 
+. . . 
+. . . 
+. . . 
+\`\`\`
+
+### This concludes our markdown test
+
+:)
+    `;
+
+    let currentIndex = 0;
+    const intervalId = setInterval(() => {
+      currentIndex = sendPartialData(res, currentIndex, prewrittenMessage);
+      if (currentIndex === prewrittenMessage.length) {
+        clearInterval(intervalId);
+        res.write(`data: {"type":"done"}\n
+    `);
+        console.log('Sent done');
+        res.end(); // WHY DOES END NOT WORK
+      }
+    }, randomTime());
+
+    return;
+  }
+
+  if (rateLimit(getIp(req)) === true) {
+    return res
+      .status(429)
+      .json({ error: true, errorMessage: "Too Many Requests", errorCode: 249 });
+  }
+
+  res.set({
+    'Cache-Control': 'no-cache',
+    'Content-Type': 'text/event-stream',
+    'Connection': 'keep-alive'
+  });
+
+  let onKill = null;
+
+  generateResponse(
+    JSON.stringify(req.body),
+    (m) => {
+      if (m.data !== undefined) {
+        // result += m.data;
+        const partialMessage = JSON.stringify({ type: 'inc', data: m.data });
+        res.write(`data: ${partialMessage}\n
+  `);
+      } else if (m.error && m.error === true) {
+        res.write(`data: {"type":"error","data":"Something went wrong"}\n
+  `);
+      } else if (m.done && m.done === true) {
+        res.write(`data: {"type":"done"}\n
+  `);
+        res.end();
+      }
+    },
+    (m) => {
+      res.status(500).json({ error: true, errorMessage: JSON.stringify(m) });
+    },
+    (m) => {
+      onKill = m;
+
+      req.once("error", (_) => {
+        typeof onKill === "function" && onKill();
+      });
+    },
+    true,
+    getIp(req)
+  );
+});
+
+// Middleware goes at the bottom, below all the actual routes
+app.use(handle404);
+app.use(errorHandler);
 
 server.listen(
   Config.default.options.server.port,

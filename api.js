@@ -1,20 +1,28 @@
-import axios from "axios";
 import { config } from "dotenv";
 import * as Tiktoken from "@dqbd/tiktoken";
 import * as fs from "fs";
 import { cwd } from "process";
 import * as path from "path";
+import OpenAI from "openai";
+import { inspect } from "util";
 config();
 
-const key = process.env.OPENAI_API_KEY;
+const openAI = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY // This is also the default, can be omitted
+});
+
+// const key = process.env.OPENAI_API_KEY;
+
+// const model = "gpt-3.5-turbo-0301";
+const encoding = Tiktoken.encoding_for_model('text-davinci-003');
 
 export function encodedLengths(messages, model = "gpt-3.5-turbo-0301") {
-  let encoding;
-  try {
-    encoding = Tiktoken.encoding_for_model(model);
-  } catch {
-    encoding = Tiktoken.get_encoding("cl100k_base");
-  }
+  // let encoding;
+  // try {
+  // encoding = Tiktoken.encoding_for_model(model);
+  // } catch {
+  // encoding = Tiktoken.get_encoding("cl100k_base");
+  // }
 
   if (model == "gpt-3.5-turbo-0301") {
     const encodedLengths = [];
@@ -36,9 +44,6 @@ export function encodedLengths(messages, model = "gpt-3.5-turbo-0301") {
               console.error(error);
               encodeCounter++;
               if (encodeCounter >= 3) {
-                console.warn(
-                  `Skipping value: ${value} after ${encodeCounter} errors.`
-                );
                 break;
               }
             }
@@ -82,21 +87,9 @@ export const getText = async (
       totalTokens -= lengthToRemove;
     }
 
-    const d = new Date();
-    messages.unshift({
-      role: "system",
-      content: `The current date and time is ${d.toLocaleDateString()} at ${d.toLocaleTimeString()}. The user's timezone is ${
-        userOptions.timeZone === false
-          ? "not given."
-          : userOptions.timeZone.substring(0, 32)
-      }`,
-    });
-
     if (userOptions.promptPrefix && userOptions.promptPrefix !== false) {
       messages.unshift({ role: "system", content: userOptions.promptPrefix });
     }
-
-    // console.log(modelOptions);
 
     let type = "system";
 
@@ -149,70 +142,26 @@ export const getText = async (
 
     // console.log("Preparing request...");
 
-    const reqBody = {
-      messages: messages,
-      temperature: modelOptions.temp,
-      max_tokens: modelOptions.maxTokens,
-      top_p: 1,
+    const stream = await openAI.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      stream: true,
       frequency_penalty: 0,
       presence_penalty: 0,
-      model: "gpt-3.5-turbo",
-      stream: true,
-    };
+      top_p: 1,
+      max_tokens: modelOptions.maxTokens,
+      temperature: modelOptions.temp,
+      messages: messages
+    });
 
-    // console.log(reqBody);
+    let result = "";
+    for await (const part of stream) {
+      result += part.choices[0].delta.content;
+      if (part.choices[0].delta.content) {
+        callback(part.choices[0].delta.content);
+      }
+    }
 
-    /* This was made before OpenAI's Node.js API had chat completion support,
-    considering a revamp soon, but for now I think it still works fine! */
-    // NOTE: Major bug it seems (with API?!) I get 400 Bad Request RANDOMLY!
-    axios
-      .post("https://api.openai.com/v1/chat/completions", reqBody, {
-        responseType: "stream",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + key,
-        },
-        signal: abortSignal,
-      })
-      .then((d) => {
-        let result = "";
-        const stream = d.data;
-        stream.on("data", (data) => {
-          const lines = data
-            ?.toString()
-            ?.split("\n")
-            .filter((line) => line.trim() !== "");
-          for (const line of lines) {
-            const message = line.replace(/^data: /, "");
-            if (message == "[DONE]") {
-              return resolve(result);
-            } else {
-              let token;
-              try {
-                const parsedMessage = JSON.parse(message);
-                token = parsedMessage?.choices?.[0]?.delta?.content;
-                if (token === undefined) continue;
-              } catch (e) {
-                log(`Error parsing message: ${message}`);
-                console.error(e);
-                continue;
-              }
-              result += token;
-              if (token) {
-                callback(token);
-              }
-            }
-          }
-        });
-      })
-      .catch((e) => {
-        callback({
-          error: true,
-          message: e.code,
-        });
-        log("[ERR]", e);
-        resolve("Something went wrong ..");
-      });
+    return resolve(result);
   });
 };
 
@@ -372,11 +321,11 @@ export const generateResponse = async (
 
         fs.writeFileSync(
           dirname +
-            "/convos/" +
-            new Date().toJSON().replace(/:/g, "-") +
-            "_" +
-            ip.replace(/:/g, "-") +
-            ".txt",
+          "/convos/" +
+          new Date().toJSON().replace(/:/g, "-") +
+          "_" +
+          ip.replace(/:/g, "-") +
+          ".txt",
           JSON.stringify({
             entryString,
             ip,
