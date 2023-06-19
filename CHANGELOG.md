@@ -77,7 +77,7 @@ This document will update alongside the changelogs that come with each new versi
 
 (Below feature is not mentioned in patch notes)
 
-- New feature inside `config.example.js` to opt in to exposing the actual system prompts to the `/api/prompts` endpoint
+- New feature inside `config.js` to opt in to exposing the actual system prompts to the `/api/prompts` endpoint
 
 ## v0.5.4
 
