@@ -1472,8 +1472,18 @@ window.addEventListener("load", async function () {
 
   function sendButton_StopGeneration() {
     try {
-      currentSocket?.close && currentSocket?.close();
-      currentSocket?.disconnect && currentSocket?.disconnect();
+      // Prematurely end the socket and return to the normal state
+      if (currentSocket?.cancel) {
+        currentSocket.cancel('stop button')
+          .then(() => {
+            // Send a response back to the callAiStream
+            window.dispatchEvent(
+              new CustomEvent("chatify-premature-end", {
+                detail: { data: 'stop button', error: false },
+              })
+            );
+          });
+      }
     } catch (e) {
       console.log("failed to close");
     }
@@ -1544,12 +1554,18 @@ window.addEventListener("load", async function () {
       let td = new TextDecoder();
       let buffer = '';
 
+      window.addEventListener("chatify-premature-end", e => {
+        callback(true);
+      });
+
+      currentSocket = reader;
+
       reader.read().then(function processResult(result) {
         if (result.done) {
           return;
         }
         let r = td.decode(result.value);
-        console.log(result, r);
+        // console.log(result, r);
         buffer += r.replace(/data:/g, ''); // add new data to buffer
         const events = buffer.split(`\n
 `); // split buffer into individual events

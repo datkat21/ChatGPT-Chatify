@@ -441,7 +441,6 @@ Long code block testing
         clearInterval(intervalId);
         res.write(`data: {"type":"done"}\n
     `);
-        console.log('Sent done');
         res.end();
       }
     }, randomTime());
