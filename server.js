@@ -122,7 +122,12 @@ prompts.forEach((p, k) => {
     avatar: p.avatar || null,
     displayName: p.displayName || null,
     // Changed as of v0.5.3
-    prompt: Config.default.options?.api && Config.default.options?.api?.exposePrompts && Config.default.options?.api?.exposePrompts === true ? (p.prompt || null) : null,
+    prompt:
+      Config.default.options?.api &&
+      Config.default.options?.api?.exposePrompts &&
+      Config.default.options?.api?.exposePrompts === true
+        ? p.prompt || null
+        : null,
     greetingMessages: p.greetingMessages || null,
   });
 });
@@ -151,7 +156,7 @@ app.get("/api/usage", (req, res) => {
   });
 });
 
-const ver = "v0.5.3";
+const ver = "v0.5.6";
 const sub = "(Customize & More)";
 let newFeatures =
   "<ul>" +
@@ -162,7 +167,8 @@ let newFeatures =
     "Added Test Mode so users can test streaming via the Chatify API",
     "Alongside streaming, the Socket.IO and POST APIs will still be available for old applications, but their use is discouraged.",
     "New markdown parser, including handling code blocks like ChatGPT (instead of breaking as it types them it shows the code block as it's being typed)",
-    "Re-done some CSS work and patched up light theme to make it more user-friendly"
+    "Re-done some CSS work and patched up light theme to make it more user-friendly",
+    "Added a new 'copy to clipboard' button next to messages, which is toggleable in settings",
   ]
     .map((f) => `<li>${f}</li>`)
     .join("\n") +
@@ -369,14 +375,19 @@ io.on("connection", (sock) => {
 
 log("Starting server...");
 
-
 function randomTime() {
   return Math.floor(Math.random() * 15 + 20);
 }
 
 function sendPartialData(res, currentIndex, prewrittenMessage) {
-  const endIndex = Math.min(currentIndex + Math.floor(Math.random() * (5 - 3 + 1) + 3), prewrittenMessage.length);
-  const partialMessage = JSON.stringify({ type: 'inc', data: prewrittenMessage.slice(currentIndex, endIndex) });
+  const endIndex = Math.min(
+    currentIndex + Math.floor(Math.random() * (5 - 3 + 1) + 3),
+    prewrittenMessage.length
+  );
+  const partialMessage = JSON.stringify({
+    type: "inc",
+    data: prewrittenMessage.slice(currentIndex, endIndex),
+  });
   res.write(`data: ${partialMessage}\n
 `);
   return endIndex;
@@ -384,13 +395,17 @@ function sendPartialData(res, currentIndex, prewrittenMessage) {
 
 import { inspect } from "util";
 
-app.post('/api/stream', (req, res) => {
-  if (req.body && req.body.userSettings && req.body.userSettings.testMode && req.body.userSettings?.testMode === true) {
-    1
+app.post("/api/stream", (req, res) => {
+  if (
+    req.body &&
+    req.body.userSettings &&
+    req.body.userSettings.testMode &&
+    req.body.userSettings?.testMode === true
+  ) {
+    1;
     // Fake a server-side message instead of actually calling the AI
     // (for event streaming testing)
-    let prewrittenMessage =
-      `Hello there, this is a pre-written message to test event streaming.
+    let prewrittenMessage = `Hello there, this is a pre-written message to test event streaming.
 
 Here's a trimmed summary of your request body:
 \`\`\`js
@@ -446,9 +461,9 @@ Long code block testing
   }
 
   res.set({
-    'Cache-Control': 'no-cache',
-    'Content-Type': 'text/event-stream',
-    'Connection': 'keep-alive'
+    "Cache-Control": "no-cache",
+    "Content-Type": "text/event-stream",
+    Connection: "keep-alive",
   });
 
   let onKill = null;
@@ -458,7 +473,7 @@ Long code block testing
     (m) => {
       if (m.data !== undefined) {
         // result += m.data;
-        const partialMessage = JSON.stringify({ type: 'inc', data: m.data });
+        const partialMessage = JSON.stringify({ type: "inc", data: m.data });
         res.write(`data: ${partialMessage}\n
   `);
       } else if (m.error && m.error === true) {

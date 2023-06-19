@@ -9,6 +9,7 @@
   - [v0.5.2](#v052)
   - [v0.5.3](#v053)
   - [v0.5.4](#v054)
+- [v0.5.5](#v055)
 
 
 # Chatify Changelogs
@@ -75,10 +76,15 @@ This document will update alongside the changelogs that come with each new versi
 - New markdown parser, including handling code blocks like ChatGPT (instead of breaking as it types them it shows the code block as it's being typed)
 - Re-done some CSS work and patched up light theme to make it more user-friendly
 
-(Below feature is not mentioned in patch notes)
+(Below features are not mentioned in patch notes)
 
 - New feature inside `config.js` to opt in to exposing the actual system prompts to the `/api/prompts` endpoint
+- (Bugged, not working) feature for the end-user to delete their own "saved" prompts
 
 ## v0.5.4
 
 - Added a new 'copy to clipboard' button next to messages, which is toggleable in settings
+
+# v0.5.5
+
+- Fix the bug mentioned in v0.5.3

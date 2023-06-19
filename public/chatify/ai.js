@@ -559,7 +559,8 @@ window.addEventListener("load", async function () {
 
       document.documentElement.dataset.showAvatars = userSettings.showAvatars;
       document.documentElement.dataset.showNames = userSettings.showNames;
-      document.documentElement.dataset.showCopyButton = userSettings.showCopyButton;
+      document.documentElement.dataset.showCopyButton =
+        userSettings.showCopyButton;
     } catch (e) {}
   }
 
@@ -686,7 +687,7 @@ window.addEventListener("load", async function () {
 
                 const z = loadAssistant();
 
-                const x = aiNameOverride || "prompt-" + z.length;
+                const x = aiNameOverride || "prompt-" + Object.keys(z).length;
 
                 const y = toSnakeCase(x);
 
@@ -700,7 +701,7 @@ window.addEventListener("load", async function () {
                       system: customSettings_systemPrompt.elm.value,
                       temp: customSettings_temp.elm.value,
                       avatar: aiAvatarOverride,
-                      name: aiNameOverride,
+                      name: x,
                     });
                   } else {
                     return;
@@ -738,9 +739,12 @@ window.addEventListener("load", async function () {
 
   let userName = localStorage.getItem("remembered-name") ?? "User";
 
+  let selectedPrompt = {};
+
   function setPrompt(prp, mkMsg = true) {
     select.elm.value = prp.id;
     selectPromptBtn.text(prp.label);
+    selectedPrompt = prp;
     if (select.elm.value === "custom") {
       customSettingsWrapper.classOff("hidden");
     } else {
@@ -780,11 +784,8 @@ window.addEventListener("load", async function () {
     }
   }
 
-  const selectPromptBtn = new Html("button")
-    .text("Select prompt..")
-    .classOn("transparent", "fg", "w-100")
-    .appendTo(selectWrapperMiddle)
-    .on("click", () => {
+  function promptPick(focusTab = "builtIn") {
+    return new Promise((resolve, reject) => {
       const tabsButtons = new Html().classOn("row").classOn("fg");
       const tabsGroup = new Html().classOn("fg-max");
 
@@ -809,6 +810,7 @@ window.addEventListener("load", async function () {
             .on("click", (e) => {
               setPrompt({ id: "custom", label: "Custom" });
               modal.hide();
+              resolve("custom");
             })
         );
 
@@ -839,12 +841,14 @@ window.addEventListener("load", async function () {
                 if (prp.type !== "saved") {
                   setPrompt(prp);
                   modal.hide();
+                  resolve(prp);
                 } else {
                   setPrompt({ id: "custom", label: "Custom" });
                   const z = JSON.stringify(assistantObj[prp.id]);
 
                   importAndLoadPrompt(z, () => {
                     modal.hide();
+                    resolve(selectedPrompt);
                   });
                 }
               }),
@@ -900,10 +904,10 @@ window.addEventListener("load", async function () {
                                 .text("OK")
                                 .classOn("fg-auto")
                                 .on("click", (e) => {
-                                  messageHistory[messageIndex] = null;
-                                  window.mh = messageHistory;
-                                  msg.cleanup();
+                                  deleteAssistant(prp.id);
                                   mdl.hide();
+                                  modal.hide();
+                                  return promptPick('saved');
                                 })
                             )
                             .append(
@@ -918,13 +922,6 @@ window.addEventListener("load", async function () {
 
                         mdl = new Modal(modalContainer);
                         mdl.show();
-
-                        // setPrompt({ id: "custom", label: "Custom" });
-                        // const z = JSON.stringify(assistantObj[prp.id]);
-
-                        // importAndLoadPrompt(z, () => {
-                        //   modal.hide();
-                        // });
                       }
                     })
                 : null
@@ -1019,10 +1016,37 @@ window.addEventListener("load", async function () {
         .append(new Html("span").text("Prompt selection"))
         .append(new Html("div").appendMany(tabsButtons).appendMany(tabsGroup));
 
-      tabTransition(promptsTab_builtInButton, promptsTab_builtInTab);
+      if (focusTab !== undefined) {
+        switch (focusTab) {
+          case "builtIn":
+            tabTransition(promptsTab_builtInButton, promptsTab_builtInTab);
+            break;
+          case "community":
+            tabTransition(promptsTab_communityButton, promptsTab_communityTab);
+            break;
+          case "saved":
+            tabTransition(promptsTab_savedButton, promptsTab_savedTab);
+            break;
+        }
+      } else tabTransition(promptsTab_builtInButton, promptsTab_builtInTab);
 
       const modal = new Modal(modalContent);
       modal.show();
+
+      modal.modal.elm
+        .querySelector(".close-btn")
+        .addEventListener("click", (_) => {
+          resolve(false); // User closed the dialog
+        });
+    });
+  }
+
+  const selectPromptBtn = new Html("button")
+    .text("Select prompt..")
+    .classOn("transparent", "fg", "w-100")
+    .appendTo(selectWrapperMiddle)
+    .on("click", async () => {
+      promptPick().then((c) => console.log(c));
     });
 
   const multiRow = new Html().classOn("row").appendTo(settingsContainer);
