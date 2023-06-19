@@ -9,7 +9,8 @@
   - [v0.5.2](#v052)
   - [v0.5.3](#v053)
   - [v0.5.4](#v054)
-- [v0.5.5](#v055)
+  - [v0.5.5](#v055)
+  - [v0.5.6](#v056)
 
 
 # Chatify Changelogs
@@ -85,6 +86,10 @@ This document will update alongside the changelogs that come with each new versi
 
 - Added a new 'copy to clipboard' button next to messages, which is toggleable in settings
 
-# v0.5.5
+## v0.5.5
 
 - Fix the bug mentioned in v0.5.3
+
+## v0.5.6
+
+- Rework a lot of the client code, moving prompt selection into an asynchronous function (`promptPick`, could be useful in scripts potentially)
