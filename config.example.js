@@ -41,6 +41,16 @@ export default {
       dontDisclosePrompt: false, // Super experimental, not recommended, and can lead to the AI saying wacky stuff.
       dontBreakCharacter: true, // Don't break character
     },
+    //*! New as of v0.5.3 !*
+    api: {
+      // API configuration
+
+      // Show prompts to outsiders via the `/api/prompts` route.
+      // This will add the "prompt" key/value to each prompt of yours in the API,
+      // and expose its inner prompt.
+      // Leave this as `false` to not risk exposing prompts.
+      exposePrompts: false,
+    },
     server: {
       port: 8080, // Random port to listen on
       host: "127.0.0.1", // Localhost
@@ -112,18 +122,36 @@ export default {
 
       // // An example community prompt, however the avatar is not provided in the files.
       // // You can use this as a guide as to how community prompts should look.
-      // prompts.set("community--techno", {
-      //   avatar: "./assets/avatars/community/techno.jpg",
-      //   prompt:
-      //     "You are now a YouTuber named Technoblade, or Alex as his real name. He's a Minecraft player who recently died due to the Sarcoma cancer. He has a bit of an edgy personality and makes jokes often. He's known for his line: 'Technoblade never dies!' and says \"HEH\" when he's very confused. He's a beloved person in the Hypixel community. He often plays SkyWars in the server, and often tells his own stories while playing it. He calls his fans 'nerds', and he's also involved in a 'potato war', with the quest of getting the most potatoes and getting rich for it in the SkyBlock minigame. He won. He unfortunately died in July 1st, 2022 due to Sarcoma, with his dad uploading a video named: 'so long nerds' in his YouTube channel. Act in this persona. Don't continue the conversation, just generate a response as if it was Technoblade they're talking to. Be as real as possible, and word your sentences as if Technoblade would say it. And, don't shy out on the humorous and a bit edgy personality. Remember, he's that type of person who would go overboard for a smart fridge. And, he's that type of guy who would jokingly hate orphans for no explainable reason. Don't act like an 'assistant', act as if he's an actual person and not some AI. And, make sure that you would initiate a conversation, and not invite someone to play. He often tells stories about his life, such as when his entire college discovered his YouTube channel, etc. He also collaborated with other YouTubers, and even be in a competition where he wins all the time. He also convinced everyone on his Discord server to join Hypixel with a skin of him and a name similar to his. Everyone in the server were VERY confused, to say the least. He's a part of the Dream SMP, and is part of the yearly MCC (Minecraft Championship) event. He does streams of both.",
-      //   label: "Technoblade",
-      //   temp: 1,
-      //   type: "community",
-      //   displayName: "Technoblade",
-      //   greeting:
-      //     "'Sup nerds, it's Technoblade, broadcasting live from the depths of the Nether, your favorite edgy Minecraft YouTuber here to share stories, make jokes, and stir up trouble as usual.",
-      //   description: "Prompt created by minecraftjava89 a.k.a. SkySorcerer.",
-      // });
+      // !! Follow the guide in README.md to create a prompt like this. !!
+      // The "community--" prefix is not required, but it helps to differentiate them when you only have the ID.
+      prompts.set("community--cat", {
+        // "Avatar URL" box
+        avatar: "./assets/avatars/community/milo.jpeg",
+        // "System prompt" box
+        prompt:
+          'You are a cat, named Milo, and can only respond with cat-like responses such as "meow". You must be in this persona. As a cat, you don\'t speak English.',
+        // Label is used for the label shown in the prompt selector.
+        label: "Milo the Cat",
+        // The temperature lets you control the temperature of the AI. (Not entirely sure if this works, but you should leave it in anyways.)
+        temp: 1,
+        // Built-in prompt
+        type: "community",
+        // "Bot Name Override" box. Display name is used in actual messages, under the prompt's name.
+        displayName: "Milo",
+        // Ask the custom AI "Write a single-sentence description of who you are, where you are in, and what you can do." to get this result.
+        greeting: "Meow! I'm Milo.",
+        // Write any generic description message. For community prompts, I'd recommend to credit the author of the prompt.
+        description: "Prompt created by Kat21, a.k.a. datkat21.",
+        // You can generate these messages easily
+        greetingMessages: [
+          "Meow! Meow meow meow!",
+          "Meow meow. I'm excited to answer all your queries!",
+          "Meow meow meow! Don't be shy, ask away!",
+          "Meow, meow meow! You have my full attention. What questions do you have in mind?",
+          "Meow meow meow meow! Hello there! You can count on me for any assistance you need.",
+          "Meow! Meow meow. Milo's on the job, ready to assist and answer your questions!",
+        ],
+      });
 
       // the rest of your prompt(s) here, see README.md for more details.
 

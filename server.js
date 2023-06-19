@@ -7,7 +7,7 @@ import { createServer } from "http";
 config();
 import { fileURLToPath } from "url";
 import path from "path";
-import fs, { existsSync, mkdirSync, readdirSync } from "fs";
+import { existsSync, mkdirSync, readdirSync } from "fs";
 
 log("Successfully loaded necessary modules.");
 
@@ -97,7 +97,7 @@ try {
   log("[ERROR]", e);
 }
 
-// global the variables
+// Global variables
 globalThis.requestsMap = requestsMap;
 globalThis.prompts = prompts;
 globalThis.MAX_REQS = MAX_REQS;
@@ -121,8 +121,8 @@ prompts.forEach((p, k) => {
     type: p.type || "builtIn",
     avatar: p.avatar || null,
     displayName: p.displayName || null,
-    // With v0.5.3, I may give the option to disclose prompt to the end users.
-    // prompt: p.prompt || null,
+    // Changed as of v0.5.3
+    prompt: Config.default.options?.api && Config.default.options?.api?.exposePrompts && Config.default.options?.api?.exposePrompts === true ? (p.prompt || null) : null,
     greetingMessages: p.greetingMessages || null,
   });
 });
@@ -136,18 +136,7 @@ app.get("/hdr", (req, res) => {
   res.json(req.headers);
 });
 
-
 app.use("/api", express.json());
-
-// TODO: Untested route, commenting out for now.
-// app.post("/api/count", (req, res) => {
-//   console.log(req.body);
-//   if (req.body && req.body.message && typeof req.body.message === "string") {
-//     res.json(encodedLengths([{ role: "user", content: req.body.message }]));
-//   } else {
-//     res.status(400).send("missing req.body??");
-//   }
-// });
 
 app.get("/api/usage", (req, res) => {
   const ip = getIp(req);
@@ -162,7 +151,7 @@ app.get("/api/usage", (req, res) => {
   });
 });
 
-const ver = "v0.5.2";
+const ver = "v0.5.3";
 const sub = "(Customize & More)";
 let newFeatures =
   "<ul>" +
@@ -170,8 +159,10 @@ let newFeatures =
     "A new theme - Lemon",
     "Re-ordered themes so they are rainbow-colored",
     "Completely migrated the slow and old Axios over to the new OpenAI beta Node.js API",
-    "Addded Test Mode so users can test streaming via the Chatify API",
+    "Added Test Mode so users can test streaming via the Chatify API",
     "Alongside streaming, the Socket.IO and POST APIs will still be available for old applications, but their use is discouraged.",
+    "New markdown parser, including handling code blocks like ChatGPT (instead of breaking as it types them it shows the code block as it's being typed)",
+    "Re-done some CSS work and patched up light theme to make it more user-friendly"
   ]
     .map((f) => `<li>${f}</li>`)
     .join("\n") +

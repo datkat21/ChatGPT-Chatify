@@ -173,10 +173,10 @@ window.addEventListener("load", async function () {
 
   function parseMarkdown(text) {
     let inCodeBlock = false; // flag to track if we're inside a code block
-    let parsedText = '';
+    let parsedText = "";
 
     // Split the text into lines
-    const lines = text.split('\n');
+    const lines = text.split("\n");
 
     // Loop through each line
     for (let i = 0; i < lines.length; i++) {
@@ -185,56 +185,62 @@ window.addEventListener("load", async function () {
       // Check if we're inside a code block
       if (inCodeBlock) {
         // If we're inside a code block, check if this line ends the block
-        if (line.trim() === '```') {
+        if (line.trim() === "```") {
           inCodeBlock = false;
-          parsedText += '</code></pre>';
+          parsedText += "</code></pre>";
         } else {
           // If we're still inside the code block, add the line to the parsed text
-          parsedText += line + '\n';
+          parsedText += line + "\n";
         }
       } else {
         // If we're not inside a code block, check if this line starts a code block
-        if (line.trim().startsWith('```')) {
+        if (line.trim().startsWith("```")) {
           inCodeBlock = true;
           const language = line.trim().slice(3);
           parsedText += `<pre><code class="language-${language}">`;
         } else {
           // If we're not inside a code block, parse the line as normal markdown
-          parsedText += parseMarkdownLine(line) + '\n';
+          parsedText += parseMarkdownLine(line) + "\n";
         }
       }
     }
 
     // If we're still inside a code block at the end of the text, close it
     if (inCodeBlock) {
-      parsedText += '</code></pre>';
+      parsedText += "</code></pre>";
     }
 
-    const codeTags = parsedText.match(/<code.+?class="language-(.*?)".*?>[\s\S]+?<\/code>/gim) || [];
+    const codeTags =
+      parsedText.match(
+        /<code.+?class="language-(.*?)".*?>[\s\S]+?<\/code>/gim
+      ) || [];
     for (let i = 0; i < codeTags.length; i++) {
-      const elem = document.createElement('div');
+      const elem = document.createElement("div");
       elem.innerHTML = codeTags[i];
       const code = elem.textContent;
       const lang = codeTags[i].match(/class="language-([^"]+)"/i);
-      const language = lang ? lang[1] : 'plaintext';
+      const language = lang ? lang[1] : "plaintext";
       const highlightedCode = hljs.highlight(code, { language }).value;
-      parsedText = parsedText.replace(codeTags[i], `<code class="language-${language}">${highlightedCode}</code>`);
+      parsedText = parsedText.replace(
+        codeTags[i],
+        `<code class="language-${language}">${highlightedCode}</code>`
+      );
     }
     return parsedText;
   }
 
   function parseMarkdownLine(line) {
     // Headers
-    line = line.replace(/^# (.+)/gm, '<h1>$1</h1>');
-    line = line.replace(/^## (.+)/gm, '<h2>$1</h2>');
-    line = line.replace(/^### (.+)/gm, '<h3>$1</h3>');
-    line = line.replace(/^#### (.+)/gm, '<h4>$1</h4>');
-    line = line.replace(/^##### (.+)/gm, '<h5>$1</h5>');
-    line = line.replace(/^###### (.+)/gm, '<h6>$1</h6>');
+    line = line.replace(/^# (.+)/gm, "<h1>$1</h1>");
+    line = line.replace(/^## (.+)/gm, "<h2>$1</h2>");
+    line = line.replace(/^### (.+)/gm, "<h3>$1</h3>");
+    line = line.replace(/^#### (.+)/gm, "<h4>$1</h4>");
+    line = line.replace(/^##### (.+)/gm, "<h5>$1</h5>");
+    line = line.replace(/^###### (.+)/gm, "<h6>$1</h6>");
 
     // Bold and italic
-    line = line.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    line = line.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    line = line.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    line = line.replace(/\*(.+?)\*/g, "<em>$1</em>");
 
     // Links
     line = line.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>');
@@ -243,10 +249,10 @@ window.addEventListener("load", async function () {
     line = line.replace(/!\[(.+?)\]\((.+?)\)/g, '<img src="$2" alt="$1">');
 
     // Inline code
-    line = line.replace(/`(.+?)`/g, '<code>$1</code>');
+    line = line.replace(/`(.+?)`/g, "<code>$1</code>");
 
     // Paragraphs
-    line = '<p>' + line + '</p>';
+    line = "<p>" + line + "</p>";
 
     return line;
   }
@@ -349,7 +355,7 @@ window.addEventListener("load", async function () {
       cb();
       const btn_modalContent = new Html("div").html(
         "Failed to load prompt. Please make sure it is a valid JSON string!<br>Error code: " +
-        e
+          e
       );
 
       const btn_modal = new Modal(btn_modalContent);
@@ -392,7 +398,9 @@ window.addEventListener("load", async function () {
   let lastScrollTop = -1;
   let lastScrollHeight = -1;
 
-  const OPENAI_URL_WS = `${location.protocol.replace("http", "ws")}//${location.host}/stream`;
+  const OPENAI_URL_WS = `${location.protocol.replace("http", "ws")}//${
+    location.host
+  }/stream`;
   let messageHistory = [];
 
   const settingsContainer = new Html().class("config").appendTo("body");
@@ -442,7 +450,7 @@ window.addEventListener("load", async function () {
     if (confirm("Are you sure you want to clear your history?")) {
       try {
         sendButton_StopGeneration();
-      } catch { }
+      } catch {}
       actuallyClearMessageHistory();
     }
   }
@@ -547,7 +555,7 @@ window.addEventListener("load", async function () {
 
       document.documentElement.dataset.showAvatars = userSettings.showAvatars;
       document.documentElement.dataset.showNames = userSettings.showNames;
-    } catch (e) { }
+    } catch (e) {}
   }
 
   loadUserSettings();
@@ -739,7 +747,7 @@ window.addEventListener("load", async function () {
       if (prp.greetingMessages && Array.isArray(prp.greetingMessages)) {
         const m =
           prp.greetingMessages[
-          Math.floor(Math.random() * prp.greetingMessages.length)
+            Math.floor(Math.random() * prp.greetingMessages.length)
           ];
         const index =
           messageHistory.push({
@@ -786,7 +794,7 @@ window.addEventListener("load", async function () {
         tab.classOff("extra-hidden");
       }
 
-      function setTabContent(tab, prompts) {
+      function setTabContent(tab, prompts, savedPromptsShowDeleteButton) {
         const promptbox = new Html().classOn("prompt-box");
 
         promptbox.append(
@@ -834,7 +842,87 @@ window.addEventListener("load", async function () {
                     modal.hide();
                   });
                 }
-              })
+              }),
+              savedPromptsShowDeleteButton === true
+                ? new Html("button")
+                    .text("Delete")
+                    .classOn("danger")
+                    .on("click", (e) => {
+                      if (prp.type !== "saved") {
+                        setPrompt(prp);
+                        modal.hide();
+                      } else {
+                        let mdl;
+                        const modalContainer = new Html().appendMany(
+                          new Html("p")
+                            .class("mt-0")
+                            .text(
+                              "Are you sure you want to delete this prompt?"
+                            ),
+
+                          new Html().classOn("prompt-box").append(
+                            new Html().classOn("prompt").append(
+                              new Html().classOn("assistant").appendMany(
+                                new Html()
+                                  .classOn("who")
+                                  .attr({
+                                    "data-mode": prp.id,
+                                    style:
+                                      prp.avatar !== null &&
+                                      prp.avatar !== undefined
+                                        ? `--icon:url(${prp.avatar})`
+                                        : "--icon:url(./assets/avatars/builtin/custom.svg)",
+                                  })
+                                  .appendMany(
+                                    new Html().classOn("icon"),
+                                    new Html()
+                                      .classOn("name")
+                                      .attr({ title: prp.id })
+                                      .text(prp.label)
+                                  ),
+                                new Html()
+                                  .classOn("greeting")
+                                  .text(prp.greeting),
+                                new Html().classOn("hint").text(prp.hint)
+                              )
+                            )
+                          ),
+
+                          new Html()
+                            .classOn("fg-auto", "row", "pb-0")
+                            .append(
+                              new Html("button")
+                                .text("OK")
+                                .classOn("fg-auto")
+                                .on("click", (e) => {
+                                  messageHistory[messageIndex] = null;
+                                  window.mh = messageHistory;
+                                  msg.cleanup();
+                                  mdl.hide();
+                                })
+                            )
+                            .append(
+                              new Html("button")
+                                .text("Cancel")
+                                .classOn("danger", "fg-auto")
+                                .on("click", (e) => {
+                                  mdl.hide();
+                                })
+                            )
+                        );
+
+                        mdl = new Modal(modalContainer);
+                        mdl.show();
+
+                        // setPrompt({ id: "custom", label: "Custom" });
+                        // const z = JSON.stringify(assistantObj[prp.id]);
+
+                        // importAndLoadPrompt(z, () => {
+                        //   modal.hide();
+                        // });
+                      }
+                    })
+                : null
             )
           );
           i.appendTo(promptbox);
@@ -917,7 +1005,8 @@ window.addEventListener("load", async function () {
             label: p.name !== false ? p.name : null,
             type: "saved",
           };
-        })
+        }),
+        true
       );
 
       const modalContent = new Html("div")
@@ -975,7 +1064,7 @@ window.addEventListener("load", async function () {
                                       if (
                                         m.type === "custom" ||
                                         prompts.find((p) => p.id === m.type) !==
-                                        undefined
+                                          undefined
                                       ) {
                                         return true;
                                       }
@@ -992,7 +1081,7 @@ window.addEventListener("load", async function () {
                                   const item = items[i];
                                   setPrompt(
                                     prompts.find((p) => p.id === item.type) ||
-                                    prompts[0],
+                                      prompts[0],
                                     false
                                   );
 
@@ -1000,18 +1089,18 @@ window.addEventListener("load", async function () {
                                     item.role === "assistant"
                                       ? item.type === "custom"
                                         ? {
-                                          label: "Custom (unknown)",
-                                          id: "custom",
-                                          greeting: "Unset",
-                                          hint: "Unset",
-                                          type: "builtIn",
-                                          avatar:
-                                            "./assets/avatars/builtin/custom.svg",
-                                          displayName: "Custom (unknown)",
-                                        }
+                                            label: "Custom (unknown)",
+                                            id: "custom",
+                                            greeting: "Unset",
+                                            hint: "Unset",
+                                            type: "builtIn",
+                                            avatar:
+                                              "./assets/avatars/builtin/custom.svg",
+                                            displayName: "Custom (unknown)",
+                                          }
                                         : prompts.find(
-                                          (p) => p.id === item.type
-                                        )
+                                            (p) => p.id === item.type
+                                          )
                                       : item.name ?? "User";
 
                                   let m = makeMessage(
@@ -1203,7 +1292,7 @@ window.addEventListener("load", async function () {
 
       const settings_testModeWrapper = new Html("span")
         .appendTo(settings_ChatbotSettingsContentWrapper)
-        .class('pb-0')
+        .class("pb-0")
         .classOn("row");
 
       const settings_testModeCheckbox = new Html("input")
@@ -1265,7 +1354,7 @@ window.addEventListener("load", async function () {
           new Html("option").text("Violet").attr({
             value: "violet",
             selected: userSettings.theme === "violet" ? true : undefined,
-          }),
+          })
         )
         .on("input", (e) => {
           document.documentElement.dataset.theme = e.target.value;
@@ -1415,20 +1504,6 @@ window.addEventListener("load", async function () {
 
   updaterequestsMessage();
 
-  marked.use({
-    pedantic: false,
-    gfm: true,
-    breaks: false,
-    sanitize: false,
-    smartypants: false,
-    xhtml: false,
-    highlight: function (code, lang) {
-      console.log('marked hljs called');
-      const language = hljs.getLanguage(lang) ? lang : "plaintext";
-      return hljs.highlight(code, { language }).value;
-    },
-  });
-
   function futureDate(fd) {
     const now = new Date();
     const diff = fd - now;
@@ -1474,15 +1549,14 @@ window.addEventListener("load", async function () {
     try {
       // Prematurely end the socket and return to the normal state
       if (currentSocket?.cancel) {
-        currentSocket.cancel('stop button')
-          .then(() => {
-            // Send a response back to the callAiStream
-            window.dispatchEvent(
-              new CustomEvent("chatify-premature-end", {
-                detail: { data: 'stop button', error: false },
-              })
-            );
-          });
+        currentSocket.cancel("stop button").then(() => {
+          // Send a response back to the callAiStream
+          window.dispatchEvent(
+            new CustomEvent("chatify-premature-end", {
+              detail: { data: "stop button", error: false },
+            })
+          );
+        });
       }
     } catch (e) {
       console.log("failed to close");
@@ -1535,71 +1609,73 @@ window.addEventListener("load", async function () {
         userSettings: {
           timeZone: userSettings.timeZone,
           promptPrefix: userSettings.promptPrefix,
-          testMode: userSettings.testMode
+          testMode: userSettings.testMode,
         },
       };
 
       const options = {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json'
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
       };
 
-      const response = await fetch('/api/stream', options);
+      const response = await fetch("/api/stream", options);
       const stream = response.body;
 
       const reader = stream.getReader();
       let td = new TextDecoder();
-      let buffer = '';
+      let buffer = "";
 
-      window.addEventListener("chatify-premature-end", e => {
+      window.addEventListener("chatify-premature-end", (e) => {
         callback(true);
       });
 
       currentSocket = reader;
 
-      reader.read().then(function processResult(result) {
-        if (result.done) {
-          return;
-        }
-        let r = td.decode(result.value);
-        // console.log(result, r);
-        buffer += r.replace(/data:/g, ''); // add new data to buffer
-        const events = buffer.split(`\n
-`); // split buffer into individual events
-        buffer = events.pop(); // store incomplete event in buffer
-        for (const event of events) {
-          try {
-            const parsedEvent = JSON.parse(event);
-            if (parsedEvent.type === 'done') {
-              // Around here it just seems to 
-              callback(true);
-              break;
-              return;
-            } else if (parsedEvent.type === 'inc') { // incoming
-              callback({ msg: parsedEvent.data.replace(/\\n/g, "\n") });
-            }
-          } catch (err) {
-            console.error(err);
+      reader
+        .read()
+        .then(function processResult(result) {
+          if (result.done) {
+            return;
           }
-        }
-        return reader.read().then(processResult);
-      }).catch((err) => {
-        console.error(err);
-        callback({
-          unfilteredMsg:
-            `<div id='AI_TEMP_ERR' class='error'>Sorry, but there was an error while loading the response: ${err}</div>`,
+          let r = td.decode(result.value);
+          // console.log(result, r);
+          buffer += r.replace(/data:/g, ""); // add new data to buffer
+          const events = buffer.split(`\n
+`); // split buffer into individual events
+          buffer = events.pop(); // store incomplete event in buffer
+          for (const event of events) {
+            try {
+              const parsedEvent = JSON.parse(event);
+              if (parsedEvent.type === "done") {
+                // Around here it just seems to
+                callback(true);
+                break;
+                return;
+              } else if (parsedEvent.type === "inc") {
+                // incoming
+                callback({ msg: parsedEvent.data.replace(/\\n/g, "\n") });
+              }
+            } catch (err) {
+              console.error(err);
+            }
+          }
+          return reader.read().then(processResult);
+        })
+        .catch((err) => {
+          console.error(err);
+          callback({
+            unfilteredMsg: `<div id='AI_TEMP_ERR' class='error'>Sorry, but there was an error while loading the response: ${err}</div>`,
+          });
+          // TODO: Figure out the error
+          return callback(true);
         });
-        // TODO: Figure out the error
-        return callback(true);
-      });
     } catch (e) {
       console.error(e);
       callback({
-        unfilteredMsg:
-          `<div id='AI_TEMP_ERR' class='error'>Sorry, but there was an error while loading the response: ${e}</div>`,
+        unfilteredMsg: `<div id='AI_TEMP_ERR' class='error'>Sorry, but there was an error while loading the response: ${e}</div>`,
       });
       // TODO: Figure out the error
       return callback(true);
@@ -1833,7 +1909,11 @@ window.addEventListener("load", async function () {
 
     let human;
     if (addUserMessage === true) {
-      human = makeMessage(0, DOMPurify.sanitize(parseMarkdown(text)), userIndex);
+      human = makeMessage(
+        0,
+        DOMPurify.sanitize(parseMarkdown(text)),
+        userIndex
+      );
     }
     let ai = makeMessage(1, "", aiIndex, prompt);
 
