@@ -375,6 +375,7 @@ window.addEventListener("load", async function () {
     send: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>',
     retry:
       '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-cw"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>',
+    copy: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>',
   };
 
   let apiUsage = {
@@ -520,6 +521,7 @@ window.addEventListener("load", async function () {
     chatViewType: "cozy",
     showAvatars: true,
     showNames: true,
+    showCopyButton: true,
     testMode: false,
   };
 
@@ -539,6 +541,8 @@ window.addEventListener("load", async function () {
       if (us.showAvatars !== undefined)
         userSettings["showAvatars"] = us.showAvatars;
       if (us.showNames !== undefined) userSettings["showNames"] = us.showNames;
+      if (us.showCopyButton !== undefined)
+        userSettings["showCopyButton"] = us.showCopyButton;
       if (us.testMode !== undefined) userSettings["testMode"] = us.testMode;
 
       // Update old settings 'clean-dark' -> 'azure'
@@ -555,6 +559,7 @@ window.addEventListener("load", async function () {
 
       document.documentElement.dataset.showAvatars = userSettings.showAvatars;
       document.documentElement.dataset.showNames = userSettings.showNames;
+      document.documentElement.dataset.showCopyButton = userSettings.showCopyButton;
     } catch (e) {}
   }
 
@@ -1267,7 +1272,7 @@ window.addEventListener("load", async function () {
 
       const settings_showNamesWrapper = new Html("span")
         .appendTo(settings_AppearanceContentWrapper)
-        .classOn("row", "pt-0", "pb-0");
+        .classOn("row", "pt-0");
 
       const settings_showNamesCheckbox = new Html("input")
         .attr({
@@ -1287,6 +1292,29 @@ window.addEventListener("load", async function () {
         })
         .text("Show names next to messages")
         .appendTo(settings_showNamesWrapper);
+
+      const settings_showCopyBtnWrapper = new Html("span")
+        .appendTo(settings_AppearanceContentWrapper)
+        .classOn("row", "pt-0", "pb-0");
+
+      const settings_showCopyBtnCheckbox = new Html("input")
+        .attr({
+          id: "shc",
+          type: "checkbox",
+          checked: userSettings.showCopyButton === true ? true : undefined,
+        })
+        .on("input", (e) => {
+          document.documentElement.dataset.showCopyButton = e.target.checked;
+          userSettings.showCopyButton = e.target.checked;
+          saveUserSettings();
+        })
+        .appendTo(settings_showCopyBtnWrapper);
+      new Html("label")
+        .attr({
+          for: "shc",
+        })
+        .text("Show 'Copy' button next to messages")
+        .appendTo(settings_showCopyBtnWrapper);
 
       const settings_ChatbotSettingsContentWrapper = new Html("span");
 
@@ -1434,6 +1462,7 @@ window.addEventListener("load", async function () {
         themeSelect.elm.value = userSettings.theme;
         settings_showAvatarsCheckbox.elm.checked = userSettings.showAvatars;
         settings_showNamesCheckbox.elm.checked = userSettings.showNames;
+        settings_showCopyBtnCheckbox.elm.checked = userSettings.showCopyButton;
         chatSelect.elm.value = userSettings.chatViewType;
         // Chatbot Settings
         promptPrefixBox.elm.value = userSettings.promptPrefix;
@@ -1737,7 +1766,7 @@ window.addEventListener("load", async function () {
     const dataContainer = new Html()
       .class("data", "fg-max")
       .appendTo(messageContentWrapper);
-    const extra = new Html().class("center-row").appendTo(msg);
+    const extra = new Html().class("column").appendTo(msg);
     const uname = new Html().class("name").appendTo(dataContainer);
     const text = new Html().class("text").appendTo(dataContainer);
     switch (side) {
@@ -1782,9 +1811,9 @@ window.addEventListener("load", async function () {
         break;
     }
     if (isSystem === false || actuallyGoesToMessageHistory === true) {
-      extra.append(
+      extra.appendMany(
         new Html("button")
-          .class("transparent")
+          .class("transparent", "fg-auto", "small")
           .html(ICONS.trashCan)
           .on("click", (e) => {
             let modal;
@@ -1816,6 +1845,22 @@ window.addEventListener("load", async function () {
 
             modal = new Modal(modalContainer);
             modal.show();
+          }),
+        new Html("button")
+          .class("transparent", "fg-auto", "small")
+          .html(ICONS.copy)
+          .on("click", (e) => {
+            let text = messageHistory[messageIndex].content;
+            if (navigator.clipboard) {
+              navigator.clipboard.writeText(text);
+            } else {
+              var textarea = document.createElement("textarea");
+              textarea.value = text;
+              document.body.appendChild(textarea);
+              textarea.select();
+              document.execCommand("copy");
+              document.body.removeChild(textarea);
+            }
           })
       );
     } else {

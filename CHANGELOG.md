@@ -1,18 +1,35 @@
 - [Chatify Changelogs](#chatify-changelogs)
-  - [v0.4.0](#v040)
+  - [v0.3.7](#v037)
+  - [v0.3.8](#v038)
+  - [v0.4.0 (first open source version)](#v040-first-open-source-version)
   - [v0.4.3](#v043)
   - [v0.4.4](#v044)
   - [v0.5.0](#v050)
   - [v0.5.1](#v051)
   - [v0.5.2](#v052)
   - [v0.5.3](#v053)
+  - [v0.5.4](#v054)
 
 
 # Chatify Changelogs
 
 This document will update alongside the changelogs that come with each new version.
 
-## v0.4.0
+(Updates v0.2.0, v0.2.1, v0.3.0, v0.3.2, and v0.3.5 had no changelogs.)
+
+## v0.3.7
+
+- Semi-functional prompt saving and loading
+- AI remembers much more of the conversation when using "Experimental: Remember context better" **(Note as of 6/19: This old feature is no longer recommended)**
+- VERY primitive themes system, only accessible by changing `data-theme` attribute on the html element to `light`, `dark`, or `amoled`.
+- I'm typing this at 4am so let me know if there are 1000 bugs, or anything I missed..
+
+## v0.3.8
+
+- Conversations using custom prompts will now import correctly, but fall back to Helper for some reason. This is currently a known issue and I will look into it later.
+- Updated server-side plans system, and now your refresh time is correctly based on your first message's time and not your latest.
+
+## v0.4.0 (first open source version)
 
 - Entire server-side codebase revamp.
     - Migrated from `ws` to `Socket.IO`
@@ -57,3 +74,11 @@ This document will update alongside the changelogs that come with each new versi
 
 - New markdown parser, including handling code blocks like ChatGPT (instead of breaking as it types them it shows the code block as it's being typed)
 - Re-done some CSS work and patched up light theme to make it more user-friendly
+
+(Below feature is not mentioned in patch notes)
+
+- New feature inside `config.example.js` to opt in to exposing the actual system prompts to the `/api/prompts` endpoint
+
+## v0.5.4
+
+- Added a new 'copy to clipboard' button next to messages, which is toggleable in settings

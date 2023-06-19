@@ -435,6 +435,10 @@ button.transparent:target {
   border: 1px solid var(--transparent-btn-border, var(--transparent-border));
 }
 
+button.small {
+  padding: 6px !important;
+}
+
 input[type="checkbox"] {
   width: auto !important;
 }
@@ -1178,4 +1182,8 @@ pre {
 [data-chat-view-type="bubbles"] .message,
 [data-chat-view-type="flat-bubbles"] .message {
   margin: 7px 0 !important;
+}
+
+[data-show-copy-button="false"] .message .column > :nth-child(2) {
+  display: none;
 }
