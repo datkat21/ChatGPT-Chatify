@@ -776,10 +776,10 @@ window.addEventListener("load", async function () {
             str += m[i];
             updateMessage(msg.elm, str);
             i++;
-            setTimeout(update, Math.floor(Math.random() * 15));
+            setTimeout(update, Math.floor(Math.random() * 15) / 4);
           }
         };
-        setTimeout(update, Math.floor(Math.random() * 15));
+        setTimeout(update, Math.floor(Math.random() * 15) / 4);
       }
     }
   }
@@ -907,7 +907,7 @@ window.addEventListener("load", async function () {
                                   deleteAssistant(prp.id);
                                   mdl.hide();
                                   modal.hide();
-                                  return promptPick('saved');
+                                  return promptPick("saved");
                                 })
                             )
                             .append(
