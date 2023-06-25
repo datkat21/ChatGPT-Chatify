@@ -175,9 +175,9 @@ window.addEventListener("load", async function () {
     let inCodeBlock = false; // flag to track if we're inside a code block
     let parsedText = "";
 
-    text = text.replace(/</g, '&lt;');
-    text = text.replace(/>/g, '&gt;');
-    text = text.replace(/&/g, '&amp;');
+    text = text.replace(/&/g, "&amp;");
+    text = text.replace(/</g, "&lt;");
+    text = text.replace(/>/g, "&gt;");
 
     // Split the text into lines
     const lines = text.split("\n");
@@ -225,12 +225,12 @@ window.addEventListener("load", async function () {
       const lang = codeTags[i].match(/class="language-([^"]+)"/i);
       const language = lang ? lang[1] : "plaintext";
       try {
-      const highlightedCode = hljs.highlight(code, { language }).value;
-      parsedText = parsedText.replace(
-        codeTags[i],
-        `<code class="language-${language}">${highlightedCode}</code>`
-      );
-      } catch(e) {
+        const highlightedCode = hljs.highlight(code, { language }).value;
+        parsedText = parsedText.replace(
+          codeTags[i],
+          `<code class="language-${language}">${highlightedCode}</code>`
+        );
+      } catch (e) {
         // ignore errors that come from highlighting, sometimes hljs can throw errors on unknown langs and such
       }
     }
@@ -1151,8 +1151,8 @@ window.addEventListener("load", async function () {
                                     updateMessage(m.elm, item.content);
                                   } else {
                                     m.query(".data .text").innerHTML =
-                                      DOMPurify.sanitize(
-                                        parseMarkdown(item.content)
+                                      parseMarkdown(
+                                        DOMPurify.sanitize(item.content)
                                         // marked.parse(item.content)
                                       );
                                   }
@@ -1528,7 +1528,7 @@ window.addEventListener("load", async function () {
   document.title = `Chatify ${versionData.version}`;
 
   const changelogLink = new Html("a")
-    .text(`View Changelog for ${versionData.version}`)
+    .text(`See Changelogs`)
     .on("click", (e) => {
       let mc = new Html().html(versionData.changelog);
       let m = new Modal(mc);
@@ -1773,8 +1773,8 @@ window.addEventListener("load", async function () {
         }
         if (!r.msg) return console.log("?!");
         result += r.msg;
-        ai.querySelector(".data .text").innerHTML = DOMPurify.sanitize(
-          parseMarkdown(result)
+        ai.querySelector(".data .text").innerHTML = parseMarkdown(
+          DOMPurify.sanitize(result)
         );
         scrollDown();
 
@@ -1952,8 +1952,8 @@ window.addEventListener("load", async function () {
     if (data !== null) {
       if (data.startsWith('"')) data = data.slice(1);
       if (data.endsWith('"')) data = data.slice(0, -1);
-      messageRef.querySelector(".data .text").innerHTML = DOMPurify.sanitize(
-        parseMarkdown(data)
+      messageRef.querySelector(".data .text").innerHTML = parseMarkdown(
+        DOMPurify.sanitize(data)
       );
     }
   }
@@ -1990,7 +1990,7 @@ window.addEventListener("load", async function () {
     if (addUserMessage === true) {
       human = makeMessage(
         0,
-        DOMPurify.sanitize(parseMarkdown(text)),
+        parseMarkdown(DOMPurify.sanitize(text)),
         userIndex
       );
     }

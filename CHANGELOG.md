@@ -1,3 +1,11 @@
+# Chatify Changelogs
+
+This document will update alongside the changelogs that come with each new version.
+
+(Updates v0.0.1-v0.2.0, v0.2.1, v0.3.0, v0.3.2, and v0.3.5 had no changelogs.)
+
+[Jump to Latest](#v058)
+
 - [Chatify Changelogs](#chatify-changelogs)
   - [v0.3.7](#v037)
   - [v0.3.8](#v038)
@@ -12,13 +20,7 @@
   - [v0.5.5](#v055)
   - [v0.5.6](#v056)
   - [v0.5.7](#v057)
-
-
-# Chatify Changelogs
-
-This document will update alongside the changelogs that come with each new version.
-
-(Updates v0.2.0, v0.2.1, v0.3.0, v0.3.2, and v0.3.5 had no changelogs.)
+  - [v0.5.8](#v058)
 
 ## v0.3.7
 
@@ -99,3 +101,8 @@ This document will update alongside the changelogs that come with each new versi
 
 - Patched and updated markdown support (element tags not being escaped properly)
 - Fixed the title to auto update as the version is loaded
+
+## v0.5.8
+
+- Patch a small bug in the markdown parser introduced with v0.5.7
+- Update server-side features list so it properly uses the CHANGELOG.md document
