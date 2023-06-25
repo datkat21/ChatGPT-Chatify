@@ -224,11 +224,15 @@ window.addEventListener("load", async function () {
       const code = elem.textContent;
       const lang = codeTags[i].match(/class="language-([^"]+)"/i);
       const language = lang ? lang[1] : "plaintext";
+      try {
       const highlightedCode = hljs.highlight(code, { language }).value;
       parsedText = parsedText.replace(
         codeTags[i],
         `<code class="language-${language}">${highlightedCode}</code>`
       );
+      } catch(e) {
+        // ignore errors that come from highlighting, sometimes hljs can throw errors on unknown langs and such
+      }
     }
     return parsedText;
   }
