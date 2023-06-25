@@ -1151,8 +1151,8 @@ window.addEventListener("load", async function () {
                                     updateMessage(m.elm, item.content);
                                   } else {
                                     m.query(".data .text").innerHTML =
-                                      parseMarkdown(
-                                        DOMPurify.sanitize(item.content)
+                                      DOMPurify.sanitize(
+                                        parseMarkdown(item.content)
                                         // marked.parse(item.content)
                                       );
                                   }
@@ -1773,8 +1773,8 @@ window.addEventListener("load", async function () {
         }
         if (!r.msg) return console.log("?!");
         result += r.msg;
-        ai.querySelector(".data .text").innerHTML = parseMarkdown(
-          DOMPurify.sanitize(result)
+        ai.querySelector(".data .text").innerHTML = DOMPurify.sanitize(
+          parseMarkdown(result)
         );
         scrollDown();
 
@@ -1952,8 +1952,8 @@ window.addEventListener("load", async function () {
     if (data !== null) {
       if (data.startsWith('"')) data = data.slice(1);
       if (data.endsWith('"')) data = data.slice(0, -1);
-      messageRef.querySelector(".data .text").innerHTML = parseMarkdown(
-        DOMPurify.sanitize(data)
+      messageRef.querySelector(".data .text").innerHTML = DOMPurify.sanitize(
+        parseMarkdown(data)
       );
     }
   }
@@ -1990,7 +1990,7 @@ window.addEventListener("load", async function () {
     if (addUserMessage === true) {
       human = makeMessage(
         0,
-        parseMarkdown(DOMPurify.sanitize(text)),
+        DOMPurify.sanitize(parseMarkdown(text)),
         userIndex
       );
     }
