@@ -11,6 +11,7 @@
   - [v0.5.4](#v054)
   - [v0.5.5](#v055)
   - [v0.5.6](#v056)
+  - [v0.5.7](#v057)
 
 
 # Chatify Changelogs
@@ -92,4 +93,8 @@ This document will update alongside the changelogs that come with each new versi
 
 ## v0.5.6
 
-- Rework a lot of the client code, moving prompt selection into an asynchronous function (`promptPick`, could be useful in scripts potentially)
+- Reworked a lot of the client code, moving prompt selection into an asynchronous function (`promptPick`, could be useful in scripts potentially)
+
+## v0.5.7
+
+- Patched and updated markdown support and fixed the title to auto update as the version is loaded.

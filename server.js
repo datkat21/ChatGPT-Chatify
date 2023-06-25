@@ -156,29 +156,40 @@ app.get("/api/usage", (req, res) => {
   });
 });
 
-const ver = "v0.5.6";
+const ver = "v0.5.7";
 const sub = "(Customize & More)";
 let newFeatures =
   "<ul>" +
   [
-    "A new theme - Lemon",
-    "Re-ordered themes so they are rainbow-colored",
-    "Completely migrated the slow and old Axios over to the new OpenAI beta Node.js API",
-    "Added Test Mode so users can test streaming via the Chatify API",
-    "Alongside streaming, the Socket.IO and POST APIs will still be available for old applications, but their use is discouraged.",
-    "New markdown parser, including handling code blocks like ChatGPT (instead of breaking as it types them it shows the code block as it's being typed)",
-    "Re-done some CSS work and patched up light theme to make it more user-friendly",
-    "Added a new 'copy to clipboard' button next to messages, which is toggleable in settings",
+    "<code>v0.5.1</code> - A few brand new color themes (Azure (previously known as <em>Clean Dark</em> in v0.5.0), Maroon, Orchid, Forest, and Violet)",
+    '<code>v0.5.1</code> - More customization options (toggle showing and hiding of avatars and names in messages, as well as a new "Flat Bubbles" chat viewing style)',
+    "<code>v0.5.1</code> - <b>Hopefully</b> fixed most server side crashing issues",
+    "<code>v0.5.2</code> - A new theme - Lemon",
+    "<code>v0.5.2</code> - Re-ordered themes so they are rainbow-colored",
+    "<code>v0.5.2</code> - Completely migrated the slow and old Axios over to the new OpenAI beta Node.js API",
+    "<code>v0.5.2</code> - Added Test Mode so users can test streaming via the Chatify API",
+    "<code>v0.5.2</code> - Alongside streaming, the Socket.IO and POST APIs will still be available for old applications, but their use is discouraged.",
+    "<code>v0.5.3</code> - New markdown parser, including handling code blocks like ChatGPT (instead of breaking as it types them it shows the code block as it's being typed)",
+    "<code>v0.5.3</code> - Re-done some CSS work and patched up light theme to make it more user-friendly",
+    "<code>v0.5.4</code> - Added a new 'copy to clipboard' button next to messages, which is toggleable in settings",
+    "<code>v0.5.5</code> - Patched a bug introduced in v0.5.3 (saved prompts not deleting)",
+    "<code>v0.5.6</code> - Reworked a lot of the client code, moving prompt selection into an asynchronous function (<code>promptPick</code>, could be useful in scripts potentially)",
+    "<code>v0.5.7</code> - Patched and updated markdown support (element tags not being escaped properly)",
+    "<code>v0.5.7</code> - Fixed the title to auto update as the version is loaded",
   ]
     .map((f) => `<li>${f}</li>`)
     .join("\n") +
   "</ul>";
+
+const [major, minor] = ver.slice(1).split(".").map(Number);
+const verString = `v${major}.${minor}`;
+
 app.get("/api/version", (req, res) => {
   // You can set any message or whatever if you make codebase changes
   res.json({
     version: ver,
     substring: sub,
-    changelog: `<h2>Chatify ${ver}</h2>This update includes:${newFeatures}<br>This project is <a target="_blank" href="https://github.com/datkat21/ChatGPT-Chatify">open-source on GitHub</a>!`,
+    changelog: `<h2>Chatify ${ver}</h2>The features of the ${verString} update includes:${newFeatures}<br>This project is <a target="_blank" href="https://github.com/datkat21/ChatGPT-Chatify">open-source on GitHub</a>!`,
     footerNote: `<p class="mt-0">Chatify-AI ${ver} ${sub}.<br>Built with the ChatGPT API.<br><b>This instance uses the Dashboard.</b><br>See our <a target="_blank" href="/usage-terms">usage policy</a>.</p>`,
   });
 });

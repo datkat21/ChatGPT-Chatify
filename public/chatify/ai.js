@@ -1521,6 +1521,8 @@ window.addEventListener("load", async function () {
 
   const versionData = await this.fetch("/api/version").then((j) => j.json());
 
+  document.title = `Chatify ${versionData.version}`;
+
   const changelogLink = new Html("a")
     .text(`View Changelog for ${versionData.version}`)
     .on("click", (e) => {
