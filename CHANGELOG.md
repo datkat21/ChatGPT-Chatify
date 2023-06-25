@@ -97,4 +97,5 @@ This document will update alongside the changelogs that come with each new versi
 
 ## v0.5.7
 
-- Patched and updated markdown support and fixed the title to auto update as the version is loaded.
+- Patched and updated markdown support (element tags not being escaped properly)
+- Fixed the title to auto update as the version is loaded
