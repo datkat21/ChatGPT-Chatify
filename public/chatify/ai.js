@@ -175,6 +175,10 @@ window.addEventListener("load", async function () {
     let inCodeBlock = false; // flag to track if we're inside a code block
     let parsedText = "";
 
+    text = text.replace(/</g, '&lt;');
+    text = text.replace(/>/g, '&gt;');
+    text = text.replace(/&/g, '&amp;');
+
     // Split the text into lines
     const lines = text.split("\n");
 
