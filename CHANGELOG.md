@@ -21,6 +21,7 @@ This document will update alongside the changelogs that come with each new versi
   - [v0.5.6](#v056)
   - [v0.5.7](#v057)
   - [v0.5.8](#v058)
+  - [v0.5.9](#v059)
 
 ## v0.3.7
 
@@ -106,3 +107,8 @@ This document will update alongside the changelogs that come with each new versi
 
 - Patch a small bug in the markdown parser introduced with v0.5.7
 - Update server-side features list so it properly uses the CHANGELOG.md document
+
+## v0.5.9
+
+- Fix an issue where error messages don't show up (started with v0.5.2) and improved error messages client-side for user friendliness
+- Added an option in the settings to customize context length in tokens

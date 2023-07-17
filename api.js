@@ -8,13 +8,13 @@ import { inspect } from "util";
 config();
 
 const openAI = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY // This is also the default, can be omitted
+  apiKey: process.env.OPENAI_API_KEY, // This is also the default, can be omitted
 });
 
 // const key = process.env.OPENAI_API_KEY;
 
 // const model = "gpt-3.5-turbo-0301";
-const encoding = Tiktoken.encoding_for_model('text-davinci-003');
+const encoding = Tiktoken.encoding_for_model("text-davinci-003");
 
 export function encodedLengths(messages, model = "gpt-3.5-turbo-0301") {
   // let encoding;
@@ -66,7 +66,7 @@ export const getText = async (
   modelOptions,
   callback,
   includeContext = false,
-  userOptions = { timeZone: false, promptPrefix: false },
+  userOptions = { timeZone: false, promptPrefix: false, ctxLength: 3072 },
   abortSignal
 ) => {
   return new Promise(async (resolve, reject) => {
@@ -81,7 +81,7 @@ export const getText = async (
     );
 
     // prev. 2048
-    while (totalTokens > 3072) {
+    while (totalTokens > userOptions.ctxLength) {
       messages.shift();
       const lengthToRemove = encodedMsgLengths.shift();
       totalTokens -= lengthToRemove;
@@ -142,16 +142,32 @@ export const getText = async (
 
     // console.log("Preparing request...");
 
-    const stream = await openAI.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      stream: true,
-      frequency_penalty: 0,
-      presence_penalty: 0,
-      top_p: 1,
-      max_tokens: modelOptions.maxTokens,
-      temperature: modelOptions.temp,
-      messages: messages
-    });
+    let shouldContinue = true;
+
+    const stream = await openAI.chat.completions
+      .create({
+        model: "gpt-3.5-turbo",
+        stream: true,
+        frequency_penalty: 0,
+        presence_penalty: 0,
+        top_p: 1,
+        max_tokens: modelOptions.maxTokens,
+        temperature: modelOptions.temp,
+        messages: messages,
+      })
+      .catch((e) => {
+        log("[Debug] An API call has failed.", e);
+        shouldContinue = false;
+
+        callback({
+          error: true,
+          message: e.code,
+        });
+        log("[ERR]", e);
+        resolve("[Response failed with error " + e.code + "]");
+      });
+
+    if (shouldContinue === false) return;
 
     let result = "";
     for await (const part of stream) {
@@ -224,6 +240,19 @@ export const generateResponse = async (
               if (encL < 1) userSettings.promptTooSmall = true;
             }
           }
+          // chatify saves its settings as strings, so we need to convert to number for calculations here
+          if (userSettings.ctxLength !== undefined) {
+            if (typeof userSettings.ctxLength !== "number")
+              userSettings.ctxLength = parseInt(userSettings.ctxLength);
+            if (userSettings.ctxLength > 3072) userSettings.ctxLength = 3072;
+            if (userSettings.ctxLength < 25) userSettings.ctxLength = 25;
+          } else userSettings.ctxLength = 3072;
+          if (userSettings.maxTokens !== undefined) {
+            if (typeof userSettings.maxTokens !== "number")
+              userSettings.maxTokens = parseInt(userSettings.maxTokens);
+            if (userSettings.maxTokens > 2048) userSettings.maxTokens = 2048;
+            if (userSettings.maxTokens < 25) userSettings.maxTokens = 25;
+          } else userSettings.maxTokens = 2048;
         }
 
         const context = oldCtx.map((m, index, array) => {
@@ -234,7 +263,7 @@ export const generateResponse = async (
           }
         });
 
-        // Remove any "Thinking..." prompt
+        // Remove any "Thinking..." prompt (hopefully)
         if (
           context[context.length - 1].role === "assistant" &&
           context[context.length - 1].content === "Thinking..."
@@ -274,7 +303,7 @@ export const generateResponse = async (
         if (data.rememberContext !== false && data.rememberContext !== true)
           return callbackError("invalid rememberContext, must be: boolean");
 
-        bot.maxTokens = 2048;
+        bot.maxTokens = userSettings.maxTokens;
 
         const controller = new AbortController();
 
@@ -282,6 +311,8 @@ export const generateResponse = async (
         callbackEarlyClose(() => {
           controller.abort("early socket close");
         });
+
+        let shouldContinue = true;
 
         const result = await getText(
           fetchedPrompt === undefined
@@ -300,7 +331,9 @@ export const generateResponse = async (
           },
           function (r) {
             if (r?.error && r?.error === true) {
+              shouldContinue = false;
               callbackData({ error: true, errorMessage: r.message });
+              log("[Debug] Stream FAILED for", ip, "with reason", r.message);
             } else {
               if (stream === true) {
                 callbackData({ data: r });
@@ -316,16 +349,18 @@ export const generateResponse = async (
           callbackData({ data: result });
         }
 
-        log("[Debug] Successfully completed stream for", ip);
+        if (shouldContinue === false) return;
+
+        log("[Debug] Stream completed for", ip);
         // H
 
         fs.writeFileSync(
           dirname +
-          "/convos/" +
-          new Date().toJSON().replace(/:/g, "-") +
-          "_" +
-          ip.replace(/:/g, "-") +
-          ".txt",
+            "/convos/" +
+            new Date().toJSON().replace(/:/g, "-") +
+            "_" +
+            ip.replace(/:/g, "-") +
+            ".txt",
           JSON.stringify({
             entryString,
             ip,

@@ -156,8 +156,8 @@ app.get("/api/usage", (req, res) => {
   });
 });
 
-const ver = "v0.5.8";
-const sub = "(Customize & More)";
+const ver = "v0.5.9";
+const sub = "(2023-07-17)";
 
 import { marked } from "marked";
 import { gfmHeadingId } from "marked-gfm-heading-id";
@@ -217,9 +217,11 @@ app.use("/dash", validateIP, express.static("public/dashboard"));
 
 app.post("/api/generate", (req, res) => {
   if (rateLimit(getIp(req)) === true) {
-    return res
-      .status(429)
-      .json({ error: true, errorMessage: "Too Many Requests", errorCode: 249 });
+    return res.status(429).json({
+      error: true,
+      errorMessage: "Too Many Requests",
+      errorCode: "too_many_requests",
+    });
   }
 
   let result = "";
@@ -458,9 +460,11 @@ Long code block testing
   }
 
   if (rateLimit(getIp(req)) === true) {
-    return res
-      .status(429)
-      .json({ error: true, errorMessage: "Too Many Requests", errorCode: 249 });
+    return res.status(429).json({
+      error: true,
+      errorMessage: "Too Many Requests",
+      errorCode: "too_many_requests",
+    });
   }
 
   res.set({
@@ -480,7 +484,10 @@ Long code block testing
         res.write(`data: ${partialMessage}\n
   `);
       } else if (m.error && m.error === true) {
-        res.write(`data: {"type":"error","data":"Something went wrong"}\n
+        res.write(`data: {"type":"error","data":"${m.errorMessage.replace(
+          /"/g,
+          '"'
+        )}"}\n
   `);
       } else if (m.done && m.done === true) {
         res.write(`data: {"type":"done"}\n

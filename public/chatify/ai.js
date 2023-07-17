@@ -531,6 +531,8 @@ window.addEventListener("load", async function () {
     showNames: true,
     showCopyButton: true,
     testMode: false,
+    ctxLength: "3072",
+    maxTokens: "2048",
   };
 
   function loadUserSettings() {
@@ -552,6 +554,8 @@ window.addEventListener("load", async function () {
       if (us.showCopyButton !== undefined)
         userSettings["showCopyButton"] = us.showCopyButton;
       if (us.testMode !== undefined) userSettings["testMode"] = us.testMode;
+      if (us.ctxLength !== undefined) userSettings["ctxLength"] = us.ctxLength;
+      if (us.maxTokens !== undefined) userSettings["maxTokens"] = us.maxTokens;
 
       // Update old settings 'clean-dark' -> 'azure'
       if (
@@ -1458,6 +1462,98 @@ window.addEventListener("load", async function () {
           saveUserSettings();
         });
 
+      const ctxLength = new Html("select")
+        .appendMany(
+          new Html("option").text("25").attr({
+            value: "25",
+            selected: userSettings.ctxLength === "25" ? true : undefined,
+          }),
+          new Html("option").text("32").attr({
+            value: "32",
+            selected: userSettings.ctxLength === "32" ? true : undefined,
+          }),
+          new Html("option").text("64").attr({
+            value: "64",
+            selected: userSettings.ctxLength === "64" ? true : undefined,
+          }),
+          new Html("option").text("128").attr({
+            value: "128",
+            selected: userSettings.ctxLength === "128" ? true : undefined,
+          }),
+          new Html("option").text("256").attr({
+            value: "256",
+            selected: userSettings.ctxLength === "256" ? true : undefined,
+          }),
+          new Html("option").text("512").attr({
+            value: "512",
+            selected: userSettings.ctxLength === "512" ? true : undefined,
+          }),
+          new Html("option").text("1024").attr({
+            value: "1024",
+            selected: userSettings.ctxLength === "1024" ? true : undefined,
+          }),
+          new Html("option").text("2048").attr({
+            value: "2048",
+            selected: userSettings.ctxLength === "2048" ? true : undefined,
+          }),
+          new Html("option").text("2500").attr({
+            value: "2500",
+            selected: userSettings.ctxLength === "2500" ? true : undefined,
+          }),
+          new Html("option").text("2750").attr({
+            value: "2750",
+            selected: userSettings.ctxLength === "2750" ? true : undefined,
+          }),
+          new Html("option").text("3072").attr({
+            value: "3072",
+            selected: userSettings.ctxLength === "3072" ? true : undefined,
+          })
+        )
+        .on("input", (e) => {
+          userSettings.ctxLength = e.target.value;
+          saveUserSettings();
+        });
+
+      const maxTokens = new Html("select")
+        .appendMany(
+          new Html("option").text("25").attr({
+            value: "25",
+            selected: userSettings.maxTokens === "25" ? true : undefined,
+          }),
+          new Html("option").text("32").attr({
+            value: "32",
+            selected: userSettings.maxTokens === "32" ? true : undefined,
+          }),
+          new Html("option").text("64").attr({
+            value: "64",
+            selected: userSettings.maxTokens === "64" ? true : undefined,
+          }),
+          new Html("option").text("128").attr({
+            value: "128",
+            selected: userSettings.maxTokens === "128" ? true : undefined,
+          }),
+          new Html("option").text("256").attr({
+            value: "256",
+            selected: userSettings.maxTokens === "256" ? true : undefined,
+          }),
+          new Html("option").text("512").attr({
+            value: "512",
+            selected: userSettings.maxTokens === "512" ? true : undefined,
+          }),
+          new Html("option").text("1024").attr({
+            value: "1024",
+            selected: userSettings.maxTokens === "1024" ? true : undefined,
+          }),
+          new Html("option").text("2048").attr({
+            value: "2048",
+            selected: userSettings.maxTokens === "2048" ? true : undefined,
+          })
+        )
+        .on("input", (e) => {
+          userSettings.maxTokens = e.target.value;
+          saveUserSettings();
+        });
+
       const modalContent = new Html("div")
         .classOn("col")
         .appendMany(
@@ -1479,6 +1575,14 @@ window.addEventListener("load", async function () {
             new Html("legend").text("Chatbot Settings"),
             new Html("span").classOn("pb-2", "flex").text("Prompt prefix"),
             promptPrefixBox,
+            new Html("span")
+              .classOn("pt-2", "pb-2", "flex")
+              .text("Context Length (in tokens)"),
+            ctxLength,
+            new Html("span")
+              .classOn("pt-2", "pb-2", "flex")
+              .text("Max Tokens (to generate)"),
+            maxTokens,
             new Html("span").classOn("pt-2", "flex").text("Test Mode"),
             settings_ChatbotSettingsContentWrapper
           )
@@ -1498,6 +1602,8 @@ window.addEventListener("load", async function () {
         chatSelect.elm.value = userSettings.chatViewType;
         // Chatbot Settings
         promptPrefixBox.elm.value = userSettings.promptPrefix;
+        ctxLength.elm.value = userSettings.ctxLength;
+        maxTokens.elm.value = userSettings.maxTokens;
         settings_testModeCheckbox.elm.checked = userSettings.testMode;
       });
 
@@ -1554,7 +1660,7 @@ window.addEventListener("load", async function () {
         (apiUsage.used / apiUsage.total) * 100 + "%";
       requestUi_meter.classOff("extra-hidden");
       requestUi_hint.text(
-        `Your quota resets in ${futureDate(new Date(apiUsage.expires))}.`
+        `Your quota resets ${futureDate(new Date(apiUsage.expires))}.`
       );
     } else {
       requestUi_text.text(
@@ -1575,16 +1681,21 @@ window.addEventListener("load", async function () {
     if (diff <= 0) {
       timeString = "now";
     } else if (diff < 1000 * 60) {
-      timeString = `${Math.floor(diff / 1000)} seconds`;
+      const seconds = Math.floor(diff / 1000);
+      timeString = seconds === 1 ? `${seconds} second` : `${seconds} seconds`;
     } else if (diff < 1000 * 60 * 60) {
-      timeString = `${Math.floor(diff / (1000 * 60))} minutes`;
+      const minutes = Math.floor(diff / (1000 * 60));
+      timeString = minutes === 1 ? `${minutes} minute` : `${minutes} minutes`;
     } else if (diff < 1000 * 60 * 60 * 24) {
-      timeString = `${Math.floor(diff / (1000 * 60 * 60))} hours`;
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      timeString = hours === 1 ? `${hours} hour` : `${hours} hours`;
     } else if (diff < 1000 * 60 * 60 * 24 * 7) {
-      timeString = `${Math.floor(diff / (1000 * 60 * 60 * 24))} days`;
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      timeString = days === 1 ? `${days} day` : `${days} days`;
     } else {
       timeString = fd.toDateString();
     }
+    if (diff >= 0) timeString = "in " + timeString;
 
     return timeString;
   }
@@ -1673,6 +1784,8 @@ window.addEventListener("load", async function () {
           timeZone: userSettings.timeZone,
           promptPrefix: userSettings.promptPrefix,
           testMode: userSettings.testMode,
+          ctxLength: userSettings.ctxLength,
+          maxTokens: userSettings.maxTokens
         },
       };
 
@@ -1684,7 +1797,44 @@ window.addEventListener("load", async function () {
         body: JSON.stringify(data),
       };
 
-      const response = await fetch("/api/stream", options);
+      let shouldContinue = true;
+      let error = null;
+
+      const response = await fetch("/api/stream", options)
+        .then(async (r) => {
+          if (!r.ok) {
+            // Expect an error in the body
+            console.log("whoops");
+            shouldContinue = false;
+            let errordata = await r.json();
+            switch (errordata.errorCode) {
+              case "too_many_requests":
+                error = `You have used too many requests (${apiUsage.used} of ${
+                  apiUsage.total
+                }) in the past hour. Please try again ${futureDate(
+                  new Date(apiUsage.expires)
+                )} from now.`;
+                break;
+              default:
+                error = errordata.errorMessage;
+                break;
+            }
+          } else return r;
+        })
+        .catch((e) => {
+          shouldContinue = false;
+          error = e;
+        });
+
+      if (shouldContinue === false) {
+        console.log("shouldContinue FAILED");
+        callback({
+          unfilteredMsg: `<div id='AI_TEMP_ERR' class='error'>${error}</div>`,
+        });
+        callback(true);
+        return;
+      }
+
       const stream = response.body;
 
       const reader = stream.getReader();
@@ -1713,9 +1863,22 @@ window.addEventListener("load", async function () {
             try {
               const parsedEvent = JSON.parse(event);
               if (parsedEvent.type === "done") {
-                // Around here it just seems to
                 callback(true);
                 break;
+              } else if (parsedEvent.type === "error") {
+                let msg = parsedEvent.data;
+                switch (msg) {
+                  case "invalid_api_key":
+                    msg =
+                      "The owner of this instance has not set up their API key properly, this is not a problem on your end.";
+                    break;
+                  case "too_many_requests":
+                    break;
+                }
+                callback({
+                  unfilteredMsg: `<div id='AI_TEMP_ERR' class='error'>Something went wrong: ${msg}</div>`,
+                });
+                callback(true);
                 return;
               } else if (parsedEvent.type === "inc") {
                 // incoming
@@ -1984,7 +2147,7 @@ window.addEventListener("load", async function () {
 
     const prompt = prompts.find((p) => p.id === select.elm.value) || prompts[0];
 
-    console.log(messageHistory[aiIndex], prompt);
+    // console.log(messageHistory[aiIndex], prompt);
 
     let human;
     if (addUserMessage === true) {
@@ -1999,7 +2162,7 @@ window.addEventListener("load", async function () {
     isTyping = true;
     updateState();
 
-    console.log(currentSocket);
+    // console.log(currentSocket);
 
     deleteConvoButton.elm.disabled = true; // Required otherwise bad things happen
 
