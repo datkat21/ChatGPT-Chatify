@@ -362,7 +362,7 @@ io.on("connection", (sock) => {
         }
       },
       (m) => {
-        sock.emit("err", { error: true, errorMessage: JSON.stringify(m) });
+        sock.emit("err", { error: true, errorMessage: m });
         hasUserRequested = false;
       },
       (m) => {
@@ -496,7 +496,7 @@ Long code block testing
       }
     },
     (m) => {
-      res.status(500).json({ error: true, errorMessage: JSON.stringify(m) });
+      res.status(500).json({ error: true, errorMessage: m });
     },
     (m) => {
       onKill = m;
