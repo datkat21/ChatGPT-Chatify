@@ -240,7 +240,7 @@ app.post("/api/generate", (req, res) => {
       }
     },
     (m) => {
-      res.status(500).json({ error: true, errorMessage: JSON.stringify(m) });
+      res.status(500).json({ error: true, errorMessage: m });
       hasUserRequested = false;
     },
     (m) => {

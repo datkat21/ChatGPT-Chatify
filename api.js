@@ -229,7 +229,10 @@ export const generateResponse = async (
                   "Bad promptPrefix data, remove it or make it a string"
                 );
               const encL = userSettings.promptPrefix.length;
-              if (encL > 4096) return callbackError("Too much promptPrefix");
+              if (encL > 4096)
+                return callbackError(
+                  "Your prompt prefix is too long, the server won't accept it."
+                );
               if (
                 userSettings.promptTooSmall !== undefined &&
                 userSettings.promptTooSmall === true
@@ -280,16 +283,22 @@ export const generateResponse = async (
         } else {
           // Custom prompt
           if (!data.customSettings)
-            return callbackError("Missing customSettings param");
+            return callbackError(
+              "API error: Missing customSettings parameter."
+            );
           if (!data.customSettings.system)
-            return callbackError("Missing system in customSettings");
+            return callbackError(
+              "API error: Missing system in customSettings."
+            );
           if (typeof data.customSettings.system !== "string")
-            return callbackError("Invalid system, must be a string");
+            return callbackError(
+              "API error: Invalid system, must be a string."
+            );
           if (!data.customSettings.temp)
-            return callbackError("Missing temp in customSettings");
+            return callbackError("API error: Missing temp in customSettings.");
           if (typeof data.customSettings.temp !== "number")
             return callbackError(
-              "Invalid temp in customSettings, must be a number"
+              "API error: Invalid temp in customSettings, must be a number."
             );
           bot = prompts.get("helper");
           fetchedPrompt = data.customSettings.system;
@@ -298,10 +307,14 @@ export const generateResponse = async (
         }
 
         if (data?.rememberContext === undefined)
-          return callbackError("missing rememberContext, try refreshing");
+          return callbackError(
+            "API error: missing rememberContext, try refreshing."
+          );
 
         if (data.rememberContext !== false && data.rememberContext !== true)
-          return callbackError("invalid rememberContext, must be: boolean");
+          return callbackError(
+            "API error: invalid rememberContext, must be boolean."
+          );
 
         bot.maxTokens = userSettings.maxTokens;
 
