@@ -1,3 +1,5 @@
+import Fuse from "./assets/scripts/fuse.esm.js";
+
 window.addEventListener("load", async function () {
   //#region Setup
   class Html {
@@ -395,7 +397,7 @@ window.addEventListener("load", async function () {
   };
 
   async function checkRequests() {
-    await this.fetch("/api/usage")
+    await fetch("/api/usage")
       .then((j) => j.json())
       .then((j) => {
         apiUsage = j;
@@ -813,21 +815,8 @@ window.addEventListener("load", async function () {
       }
 
       function setTabContent(tab, prompts, savedPromptsShowDeleteButton) {
-        const promptbox = new Html().classOn("prompt-box");
-
-        promptbox.append(
-          new Html("button")
-            .text("Create your own prompt")
-            .classOn("fg-auto")
-            .on("click", (e) => {
-              setPrompt({ id: "custom", label: "Custom" });
-              modal.hide();
-              resolve("custom");
-            })
-        );
-
-        prompts.forEach((prp) => {
-          const i = new Html().classOn("prompt").appendMany(
+        function makePrompt(prp) {
+          return new Html().classOn("prompt").appendMany(
             new Html().classOn("assistant").appendMany(
               new Html()
                 .classOn("who")
@@ -939,10 +928,65 @@ window.addEventListener("load", async function () {
                 : null
             )
           );
-          i.appendTo(promptbox);
-        });
+        }
 
-        tab.append(promptbox);
+        const container = new Html().classOn("prompt-box").appendTo(tab);
+        const controlsBox = new Html()
+          .classOn("prompt-box")
+          .appendTo(container);
+        const promptBox = new Html().classOn("prompt-box").appendTo(container);
+
+        const searchBar = new Html("input")
+          .attr({ type: "text", placeholder: "Search..." })
+          .on("input", (e) => {
+            // Setup fuse.js
+            const options = {
+              keys: ["name", "system", "greeting", "displayName", 'hint'], // Properties to search in
+              shouldSort: true, // Sort the results by score
+            };
+
+            const fuse = new Fuse(prompts, options);
+
+            const term = e.target.value;
+
+            if (term === "") {
+              promptBox.html("");
+              prompts.forEach((prp) => {
+                const i = makePrompt(prp);
+                i.appendTo(promptBox);
+              });
+              return;
+            }
+
+            const searchResults = fuse.search(term);
+
+            promptBox.html("");
+
+            if (searchResults.length > 0)
+              searchResults.forEach((r) => {
+                const i = r.refIndex;
+
+                makePrompt(prompts[i]).appendTo(promptBox);
+              });
+            else promptBox.html(`<i style="color:var(--text-color-accent);">Your search had no results.</i>`);
+          });
+
+        controlsBox.appendMany(
+          new Html("button")
+            .text("Create your own prompt")
+            .classOn("fg-auto")
+            .on("click", (e) => {
+              setPrompt({ id: "custom", label: "Custom" });
+              modal.hide();
+              resolve("custom");
+            }),
+          searchBar
+        );
+
+        prompts.forEach((prp) => {
+          const i = makePrompt(prp);
+          i.appendTo(promptBox);
+        });
       }
 
       const promptsTab_builtInButton = new Html("button")
@@ -1006,22 +1050,22 @@ window.addEventListener("load", async function () {
         .appendTo(tabsGroup);
       const assistantObj = loadAssistant();
 
-      setTabContent(
-        promptsTab_savedTab,
-        Object.keys(assistantObj).map((key) => {
-          const p = assistantObj[key];
-          return {
-            avatar: p.avatar !== false ? p.avatar : null,
-            displayName: p.name !== false ? p.name : null,
-            greeting: p.system,
-            hint: "This is one of your custom prompts.",
-            id: key,
-            label: p.name !== false ? p.name : null,
-            type: "saved",
-          };
-        }),
-        true
-      );
+      let assistantKeys = Object.keys(assistantObj);
+      let assistantArray = Object.values(assistantObj);
+      let assistantHtml = assistantKeys.map((key) => {
+        const p = assistantObj[key];
+        return {
+          avatar: p.avatar !== false ? p.avatar : null,
+          displayName: p.name !== false ? p.name : null,
+          greeting: p.system,
+          hint: "This is one of your custom prompts.",
+          id: key,
+          label: p.name !== false ? p.name : null,
+          type: "saved",
+        };
+      });
+
+      setTabContent(promptsTab_savedTab, assistantHtml, true);
 
       const modalContent = new Html("div")
         .class("fg")
@@ -1391,6 +1435,10 @@ window.addEventListener("load", async function () {
             value: "amoled",
             selected: userSettings.theme === "amoled" ? true : undefined,
           }),
+          new Html("option").text("Lavender").attr({
+            value: "lavender",
+            selected: userSettings.theme === "lavender" ? true : undefined,
+          }),
           new Html("option").text("Maroon").attr({
             value: "maroon",
             selected: userSettings.theme === "maroon" ? true : undefined,
@@ -1629,7 +1677,7 @@ window.addEventListener("load", async function () {
     .text("..")
     .appendTo(requestUi_wrapper);
 
-  const versionData = await this.fetch("/api/version").then((j) => j.json());
+  const versionData = await fetch("/api/version").then((j) => j.json());
 
   document.title = `Chatify ${versionData.version}`;
 
@@ -1785,7 +1833,7 @@ window.addEventListener("load", async function () {
           promptPrefix: userSettings.promptPrefix,
           testMode: userSettings.testMode,
           ctxLength: userSettings.ctxLength,
-          maxTokens: userSettings.maxTokens
+          maxTokens: userSettings.maxTokens,
         },
       };
 
@@ -2129,7 +2177,7 @@ window.addEventListener("load", async function () {
   });
 
   async function request(text, addUserMessage = true) {
-    message = text;
+    // message = text;
 
     const userIndex =
       messageHistory.push({

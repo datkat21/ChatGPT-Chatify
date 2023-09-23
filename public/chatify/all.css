@@ -253,6 +253,29 @@ body {
   --code-block: hsl(60, 33%, 17%);
 }
 
+:root[data-theme="lavender"] {
+  --accent: #4028d2;
+  --meter: #533dd6;
+  --input-background-color: #161518;
+  --input-border: #6c6b6e66;
+  --button-background-color: #4028d2;
+  --button-neutral-color: #50505041;
+  --button-transparent-color: #50505000;
+  --button-danger-color: #5a0808;
+  --text-color: #ffffff;
+  --background-default: #1d1c20;
+  --background-dim: #1a191d;
+  --background-dimmer: #161518;
+  --transparent-border: #fff3;
+  --background-light: #1d1c20;
+  --tab-selector: #1d1c20;
+  --tab-selected: #333236;
+  --transparent-border-alt: #8e8d8f22;
+  --text-color-accent: #8373e2;
+  --separator: #676574;
+  --code-block: #161518;
+}
+
 .badge {
   padding: 4px 8px;
   border-radius: 99px;
@@ -979,6 +1002,8 @@ button.tab-selector.selected {
   align-items: flex-start;
   padding: 0px;
   gap: 16px;
+  flex-shrink: 0;
+  width: 100%;
 }
 
 .prompt {
@@ -1160,11 +1185,11 @@ pre {
 }
 
 [data-chat-view-type="bubbles"] .message.gpt > .wrapper .text {
-  background-color: var(--button-background-color);
+  background-color: var(--background-dimmer);
 }
 
 [data-chat-view-type="bubbles"] .message.user > .wrapper .text {
-  background-color: var(--background-light);
+  background-color: var(--background-dim);
 }
 
 [data-chat-view-type="flat-bubbles"] .message.gpt > .wrapper .text {
@@ -1172,7 +1197,7 @@ pre {
 }
 
 [data-chat-view-type="flat-bubbles"] .message.user > .wrapper .text {
-  border-color: var(--background-light);
+  border-color: var(--background-dim);
 }
 
 [data-show-names="false"] .message > .wrapper > .data > .name {

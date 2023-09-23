@@ -22,6 +22,7 @@ This document will update alongside the changelogs that come with each new versi
   - [v0.5.7](#v057)
   - [v0.5.8](#v058)
   - [v0.5.9](#v059)
+  - [v0.5.10](#v0510)
 
 ## v0.3.7
 
@@ -112,3 +113,9 @@ This document will update alongside the changelogs that come with each new versi
 
 - Fix an issue where error messages don't show up (started with v0.5.2) and improved error messages client-side for user friendliness
 - Added an option in the settings to customize context length in tokens
+
+## v0.5.10
+
+- Added fuzzy search support via Fuse.js
+- Some minor quality of life improvements
+- Added "Lavender" theme, a new attempt at a dark theme
