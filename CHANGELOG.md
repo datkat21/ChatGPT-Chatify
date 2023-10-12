@@ -25,6 +25,8 @@ This document will update alongside the changelogs that come with each new versi
   - [v0.5.10](#v0510)
   - [v0.6.0](#v060)
     - [Known Bugs](#known-bugs)
+  - [v0.6.1](#v061)
+    - [Known Bugs](#known-bugs-1)
 
 ## v0.3.7
 
@@ -130,7 +132,19 @@ This document will update alongside the changelogs that come with each new versi
 - Basic message editing system (and the ability to hide the edit button)
 - Fixed an issue where custom prompts wouldn't load automatically on conversation import
 - Fixed a long-lasting bug where Dashboard logs would have "undefined" appended to them
+- Prompt prefix can be toggled on/off
 
 ### Known Bugs
 
 - Edit button changes won't sync across tabs, to be fixed in v0.6.1
+- Disabling prompt prefix doesn't work properly
+
+## v0.6.1
+
+- Fixed a couple small issues mentioned in v0.6.0:
+  - Partially syncing edit button feature
+  - Fixed a small issue relating to when the prompt prefix is disabled it doesn't work
+
+### Known Bugs
+
+- Toggling the edit button won't work until you open the settings menu

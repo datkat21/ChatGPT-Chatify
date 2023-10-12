@@ -468,6 +468,8 @@ window.addEventListener("load", async function () {
       if (us.showNames !== undefined) userSettings["showNames"] = us.showNames;
       if (us.showCopyButton !== undefined)
         userSettings["showCopyButton"] = us.showCopyButton;
+      if (us.showEditButton !== undefined)
+        userSettings["showEditButton"] = us.showEditButton;
       if (us.testMode !== undefined) userSettings["testMode"] = us.testMode;
       if (us.ctxLength !== undefined) userSettings["ctxLength"] = us.ctxLength;
       if (us.maxTokens !== undefined) userSettings["maxTokens"] = us.maxTokens;
@@ -1507,7 +1509,9 @@ window.addEventListener("load", async function () {
 
       const promptPrefixBox = new Html("textarea")
         .attr({ rows: 4, placeholder: "<none>", resize: "none" })
-        .html(userSettings.promptPrefix !== false ? userSettings.promptPrefix : "")
+        .html(
+          userSettings.promptPrefix !== false ? userSettings.promptPrefix : ""
+        )
         .on("input", (e) => {
           userSettings.promptPrefix =
             e.target.value.length > 0 ? e.target.value : false;
@@ -1656,7 +1660,8 @@ window.addEventListener("load", async function () {
         settings_showCopyBtnCheckbox.elm.checked = userSettings.showCopyButton;
         settings_showEditButtonCheckbox.elm.checked =
           userSettings.showEditButton;
-          console.log(userSettings.showEditButton);
+        document.documentElement.dataset.showEditButton =
+          userSettings.showEditButton;
         chatSelect.elm.value = userSettings.chatViewType;
         // Chatbot Settings
         settings_togglePromptPrefixCheckbox.elm.checked =
@@ -1846,7 +1851,7 @@ window.addEventListener("load", async function () {
           promptPrefix:
             userSettings.promptPrefixEnabled === true
               ? userSettings.promptPrefix
-              : null,
+              : "",
           testMode: userSettings.testMode,
           ctxLength: userSettings.ctxLength,
           maxTokens: userSettings.maxTokens,

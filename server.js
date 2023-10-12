@@ -158,8 +158,8 @@ app.get("/api/usage", (req, res) => {
   });
 });
 
-const ver = "v0.6.0";
-const sub = "(2023-10-11)";
+const ver = "v0.6.1";
+const sub = "(2023-10-12)";
 
 import { marked } from "marked";
 import { gfmHeadingId } from "marked-gfm-heading-id";
