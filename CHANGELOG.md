@@ -23,6 +23,8 @@ This document will update alongside the changelogs that come with each new versi
   - [v0.5.8](#v058)
   - [v0.5.9](#v059)
   - [v0.5.10](#v0510)
+  - [v0.6.0](#v060)
+    - [Known Bugs](#known-bugs)
 
 ## v0.3.7
 
@@ -119,3 +121,16 @@ This document will update alongside the changelogs that come with each new versi
 - Added fuzzy search support via Fuse.js
 - Some minor quality of life improvements
 - Added "Lavender" theme, a new attempt at a dark theme
+
+## v0.6.0
+
+- Updated the [Html](https://github.com/datkat21/html) dependency to v1.1.1
+- Minor CSS fixes:
+  - Fixed a long-lasting issue where text that was too long made the entire container scroll horizontally
+- Basic message editing system (and the ability to hide the edit button)
+- Fixed an issue where custom prompts wouldn't load automatically on conversation import
+- Fixed a long-lasting bug where Dashboard logs would have "undefined" appended to them
+
+### Known Bugs
+
+- Edit button changes won't sync across tabs, to be fixed in v0.6.1

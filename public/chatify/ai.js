@@ -1,102 +1,8 @@
 import Fuse from "./assets/scripts/fuse.esm.js";
+import Html from "./assets/scripts/html.js";
 
 window.addEventListener("load", async function () {
   //#region Setup
-  class Html {
-    constructor(e) {
-      this.elm = document.createElement(e || "div");
-    }
-    text(val) {
-      this.elm.innerText = val;
-      return this;
-    }
-    html(val) {
-      this.elm.innerHTML = val;
-      return this;
-    }
-    cleanup() {
-      this.elm.remove();
-    }
-    query(selector) {
-      return this.elm.querySelector(selector);
-    }
-    class(...val) {
-      for (let i = 0; i < val.length; i++) {
-        this.elm.classList.toggle(val[i]);
-      }
-      return this;
-    }
-    classOn(...val) {
-      for (let i = 0; i < val.length; i++) {
-        this.elm.classList.add(val[i]);
-      }
-      return this;
-    }
-    classOff(...val) {
-      for (let i = 0; i < val.length; i++) {
-        this.elm.classList.remove(val[i]);
-      }
-      return this;
-    }
-    style(obj) {
-      for (const key of Object.keys(obj)) {
-        this.elm.style.setProperty(key, obj[key]);
-      }
-      return this;
-    }
-    on(ev, cb) {
-      this.elm.addEventListener(ev, cb);
-      return this;
-    }
-    un(ev, cb) {
-      this.elm.removeEventListener(ev, cb);
-      return this;
-    }
-    appendTo(parent) {
-      if (parent instanceof HTMLElement) {
-        parent.appendChild(this.elm);
-      } else if (parent instanceof Html) {
-        parent.elm.appendChild(this.elm);
-      } else if (typeof parent === "string") {
-        document.querySelector(parent).appendChild(this.elm);
-      }
-      return this;
-    }
-    append(elem) {
-      if (elem instanceof HTMLElement) {
-        this.elm.appendChild(elem);
-      } else if (elem instanceof Html) {
-        this.elm.appendChild(elem.elm);
-      } else if (typeof elem === "string") {
-        const newElem = document.createElement(elem);
-        this.elm.appendChild(newElem);
-        return new Html(newElem);
-      }
-      return this;
-    }
-    appendMany(...elements) {
-      for (const elem of elements) {
-        this.append(elem);
-      }
-      return this;
-    }
-    clear() {
-      this.elm.innerHTML = "";
-      return this;
-    }
-    attr(obj) {
-      for (let key in obj) {
-        if (obj.hasOwnProperty(key)) {
-          if (obj[key] === undefined) {
-            this.elm.removeAttribute(key);
-          } else {
-            this.elm.setAttribute(key, obj[key]);
-          }
-        }
-      }
-      return this;
-    }
-  }
   class Modal {
     constructor(content) {
       this.modal = new Html("div");
@@ -238,7 +144,6 @@ window.addEventListener("load", async function () {
     }
     return parsedText;
   }
-
   function parseMarkdownLine(line) {
     // Headers
     line = line.replace(/^# (.+)/gm, "<h1>$1</h1>");
@@ -304,6 +209,8 @@ window.addEventListener("load", async function () {
     delete prompts[id];
     localStorage.setItem("prompts", JSON.stringify(prompts));
   }
+  let assistantObj = null;
+  let loadedCustomPrompt = {};
 
   function saveConvo(id, obj) {
     let convos = {};
@@ -347,8 +254,8 @@ window.addEventListener("load", async function () {
         if (r.avatar === undefined) r.avatar = false;
         customSettings_systemPrompt.elm.value = r.system;
         customSettings_temp.elm.value = r.temp;
-        aiNameOverride = r.name;
-        aiAvatarOverride = r.avatar;
+        aiNameOverride = r.name || "";
+        aiAvatarOverride = r.avatar || "";
         customSettings_overrideName.elm.value = aiNameOverride;
         customSettings_overrideAvatar.elm.value = aiAvatarOverride;
         cb();
@@ -374,6 +281,7 @@ window.addEventListener("load", async function () {
   }
   //#endregion
 
+  // https://lucide.dev/
   const ICONS = {
     trashCan:
       '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>',
@@ -386,6 +294,7 @@ window.addEventListener("load", async function () {
     retry:
       '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-refresh-cw"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>',
     copy: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-copy"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>',
+    edit: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-pencil"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>',
   };
 
   let apiUsage = {
@@ -523,6 +432,7 @@ window.addEventListener("load", async function () {
 
   let userSettings = {
     promptPrefix: "", // string | false, if 0 char is false
+    promptPrefixEnabled: true,
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || false,
     theme: "clean-dark",
     username: "User",
@@ -532,6 +442,7 @@ window.addEventListener("load", async function () {
     showAvatars: true,
     showNames: true,
     showCopyButton: true,
+    showEditButton: true,
     testMode: false,
     ctxLength: "3072",
     maxTokens: "2048",
@@ -543,6 +454,8 @@ window.addEventListener("load", async function () {
 
       if (us.promptPrefix !== undefined)
         userSettings["promptPrefix"] = us.promptPrefix;
+      if (us.promptPrefixEnabled !== undefined)
+        userSettings["promptPrefixEnabled"] = us.promptPrefixEnabled;
       if (us.timeZone !== undefined) userSettings["timeZone"] = us.timeZone;
       if (us.theme !== undefined) userSettings["theme"] = us.theme;
       if (us.username !== undefined) userSettings["username"] = us.username;
@@ -844,8 +757,11 @@ window.addEventListener("load", async function () {
                   modal.hide();
                   resolve(prp);
                 } else {
+                  // New custom prompt handling
                   setPrompt({ id: "custom", label: "Custom" });
-                  const z = JSON.stringify(assistantObj[prp.id]);
+                  loadedCustomPrompt = assistantObj[prp.id];
+                  loadedCustomPrompt.id = prp.id;
+                  const z = JSON.stringify(loadedCustomPrompt);
 
                   importAndLoadPrompt(z, () => {
                     modal.hide();
@@ -941,7 +857,7 @@ window.addEventListener("load", async function () {
           .on("input", (e) => {
             // Setup fuse.js
             const options = {
-              keys: ["name", "system", "greeting", "displayName", 'hint'], // Properties to search in
+              keys: ["name", "system", "greeting", "displayName", "hint"], // Properties to search in
               shouldSort: true, // Sort the results by score
             };
 
@@ -968,7 +884,10 @@ window.addEventListener("load", async function () {
 
                 makePrompt(prompts[i]).appendTo(promptBox);
               });
-            else promptBox.html(`<i style="color:var(--text-color-accent);">Your search had no results.</i>`);
+            else
+              promptBox.html(
+                `<i style="color:var(--text-color-accent);">Your search had no results.</i>`
+              );
           });
 
         controlsBox.appendMany(
@@ -1048,7 +967,7 @@ window.addEventListener("load", async function () {
       const promptsTab_savedTab = new Html("div")
         .classOn("tab")
         .appendTo(tabsGroup);
-      const assistantObj = loadAssistant();
+      assistantObj = loadAssistant();
 
       let assistantKeys = Object.keys(assistantObj);
       let assistantArray = Object.values(assistantObj);
@@ -1102,7 +1021,7 @@ window.addEventListener("load", async function () {
     .classOn("transparent", "fg", "w-100")
     .appendTo(selectWrapperMiddle)
     .on("click", async () => {
-      promptPick().then((c) => console.log(c));
+      promptPick();
     });
 
   const multiRow = new Html().classOn("row").appendTo(settingsContainer);
@@ -1170,19 +1089,50 @@ window.addEventListener("load", async function () {
                                     false
                                   );
 
+                                  if (assistantObj === null) {
+                                    assistantObj = loadAssistant();
+                                  }
+
+                                  let customPrompt = {};
+                                  let isCustomPrompt =
+                                    (item.promptId !== undefined &&
+                                      item.promptId in assistantObj) === true;
+
+                                  if (isCustomPrompt) {
+                                    customPrompt = assistantObj[item.promptId];
+
+                                    // Make sure the custom prompt is the last one selected
+                                    const z = JSON.stringify(customPrompt);
+                                    setPrompt({
+                                      id: "custom",
+                                      label: "Custom",
+                                    });
+                                    importAndLoadPrompt(z, (_) => {});
+                                  }
+
                                   const pickedPrompt =
                                     item.role === "assistant"
                                       ? item.type === "custom"
-                                        ? {
-                                            label: "Custom (unknown)",
-                                            id: "custom",
-                                            greeting: "Unset",
-                                            hint: "Unset",
-                                            type: "builtIn",
-                                            avatar:
-                                              "./assets/avatars/builtin/custom.svg",
-                                            displayName: "Custom (unknown)",
-                                          }
+                                        ? isCustomPrompt
+                                          ? {
+                                              label: customPrompt.name,
+                                              id: "custom",
+                                              greeting: "Unset",
+                                              hint: "Unset",
+                                              type: "custom",
+                                              avatar: customPrompt.avatar,
+                                              displayName: customPrompt.name,
+                                            }
+                                          : {
+                                              label: "Custom (unknown)",
+                                              id: "custom",
+                                              greeting: "Unset",
+                                              hint: "Unset",
+                                              type: "builtIn",
+                                              avatar:
+                                                "./assets/avatars/builtin/custom.svg",
+                                              displayName: "Custom (unknown)",
+                                            }
                                         : prompts.find(
                                             (p) => p.id === item.type
                                           )
@@ -1375,7 +1325,7 @@ window.addEventListener("load", async function () {
 
       const settings_showCopyBtnWrapper = new Html("span")
         .appendTo(settings_AppearanceContentWrapper)
-        .classOn("row", "pt-0", "pb-0");
+        .classOn("row", "pt-0");
 
       const settings_showCopyBtnCheckbox = new Html("input")
         .attr({
@@ -1395,6 +1345,29 @@ window.addEventListener("load", async function () {
         })
         .text("Show 'Copy' button next to messages")
         .appendTo(settings_showCopyBtnWrapper);
+
+      const settings_showEditButtonWrapper = new Html("span")
+        .appendTo(settings_AppearanceContentWrapper)
+        .classOn("row", "pt-0", "pb-0");
+
+      const settings_showEditButtonCheckbox = new Html("input")
+        .attr({
+          id: "she",
+          type: "checkbox",
+          checked: userSettings.showEditButton === true ? true : undefined,
+        })
+        .on("input", (e) => {
+          document.documentElement.dataset.showEditButton = e.target.checked;
+          userSettings.showEditButton = e.target.checked;
+          saveUserSettings();
+        })
+        .appendTo(settings_showEditButtonWrapper);
+      new Html("label")
+        .attr({
+          for: "she",
+        })
+        .text("Show 'Edit' button next to messages")
+        .appendTo(settings_showEditButtonWrapper);
 
       const settings_ChatbotSettingsContentWrapper = new Html("span");
 
@@ -1501,14 +1474,47 @@ window.addEventListener("load", async function () {
           saveUserSettings();
         });
 
+      const settings_togglePromptPrefixWrapper = new Html("span")
+        .appendTo(settings_ChatbotSettingsContentWrapper)
+        .classOn("row");
+
+      function togglePpReadonly() {
+        if (!settings_togglePromptPrefixCheckbox.elm.checked) {
+          promptPrefixBox.elm.disabled = true;
+        } else {
+          promptPrefixBox.elm.disabled = false;
+        }
+      }
+
+      const settings_togglePromptPrefixCheckbox = new Html("input")
+        .attr({
+          id: "epp",
+          type: "checkbox",
+          checked: userSettings.promptPrefixEnabled === true ? true : undefined,
+        })
+        .on("input", (e) => {
+          userSettings.promptPrefixEnabled = e.target.checked;
+          togglePpReadonly();
+          saveUserSettings();
+        })
+        .appendTo(settings_togglePromptPrefixWrapper);
+      new Html("label")
+        .attr({
+          for: "epp",
+        })
+        .text("Enable prompt prefix")
+        .appendTo(settings_togglePromptPrefixWrapper);
+
       const promptPrefixBox = new Html("textarea")
         .attr({ rows: 4, placeholder: "<none>", resize: "none" })
-        .html(userSettings.promptPrefix !== "" ? userSettings.promptPrefix : "")
+        .html(userSettings.promptPrefix !== false ? userSettings.promptPrefix : "")
         .on("input", (e) => {
           userSettings.promptPrefix =
             e.target.value.length > 0 ? e.target.value : false;
           saveUserSettings();
         });
+
+      togglePpReadonly();
 
       const ctxLength = new Html("select")
         .appendMany(
@@ -1621,6 +1627,7 @@ window.addEventListener("load", async function () {
           ),
           new Html("fieldset").appendMany(
             new Html("legend").text("Chatbot Settings"),
+            settings_togglePromptPrefixWrapper,
             new Html("span").classOn("pb-2", "flex").text("Prompt prefix"),
             promptPrefixBox,
             new Html("span")
@@ -1647,8 +1654,14 @@ window.addEventListener("load", async function () {
         settings_showAvatarsCheckbox.elm.checked = userSettings.showAvatars;
         settings_showNamesCheckbox.elm.checked = userSettings.showNames;
         settings_showCopyBtnCheckbox.elm.checked = userSettings.showCopyButton;
+        settings_showEditButtonCheckbox.elm.checked =
+          userSettings.showEditButton;
+          console.log(userSettings.showEditButton);
         chatSelect.elm.value = userSettings.chatViewType;
         // Chatbot Settings
+        settings_togglePromptPrefixCheckbox.elm.checked =
+          userSettings.promptPrefixEnabled;
+        togglePpReadonly();
         promptPrefixBox.elm.value = userSettings.promptPrefix;
         ctxLength.elm.value = userSettings.ctxLength;
         maxTokens.elm.value = userSettings.maxTokens;
@@ -1695,7 +1708,7 @@ window.addEventListener("load", async function () {
     .append(changelogLink)
     .appendTo(settingsContainer);
 
-  function updaterequestsMessage() {
+  function updateRequestsMessage() {
     if (apiUsage.remaining !== null) {
       requestUi_text.text(
         `${apiUsage.used} of ${apiUsage.total} requests used (${apiUsage.plan}).`
@@ -1719,7 +1732,7 @@ window.addEventListener("load", async function () {
     }
   }
 
-  updaterequestsMessage();
+  updateRequestsMessage();
 
   function futureDate(fd) {
     const now = new Date();
@@ -1830,7 +1843,10 @@ window.addEventListener("load", async function () {
           .slice(0, messageHistory.length - 1),
         userSettings: {
           timeZone: userSettings.timeZone,
-          promptPrefix: userSettings.promptPrefix,
+          promptPrefix:
+            userSettings.promptPrefixEnabled === true
+              ? userSettings.promptPrefix
+              : null,
           testMode: userSettings.testMode,
           ctxLength: userSettings.ctxLength,
           maxTokens: userSettings.maxTokens,
@@ -2106,6 +2122,48 @@ window.addEventListener("load", async function () {
               document.execCommand("copy");
               document.body.removeChild(textarea);
             }
+          }),
+        new Html("button")
+          .class("transparent", "fg-auto", "small")
+          .html(ICONS.edit)
+          .on("click", (e) => {
+            let text = messageHistory[messageIndex].content;
+
+            const textArea = new Html("textarea")
+              .classOn("mt-1")
+              .attr({ rows: 8, placeholder: "Message content is empty" })
+              .val(text);
+
+            let modal;
+
+            const modalContainer = new Html()
+              .text(`Edit Message #${messageIndex}`)
+              .appendMany(
+                textArea,
+                new Html()
+                  .classOn("fg-auto", "row")
+                  .append(
+                    new Html("button")
+                      .text("OK")
+                      .classOn("fg-auto")
+                      .on("click", (e) => {
+                        let editedValue = textArea.getValue();
+                        updateMessage(msg.elm, editedValue);
+                        messageHistory[messageIndex].content = editedValue;
+                        modal.hide();
+                      })
+                  )
+                  .append(
+                    new Html("button")
+                      .text("Cancel")
+                      .classOn("danger", "fg-auto")
+                      .on("click", (e) => {
+                        modal.hide();
+                      })
+                  )
+              );
+            modal = new Modal(modalContainer);
+            modal.show();
           })
       );
     } else {
@@ -2193,6 +2251,17 @@ window.addEventListener("load", async function () {
         content: "Thinking...",
       }) - 1;
 
+    if (select.elm.value === "custom") {
+      // Custom prompts handle differently than normal ones, so we save custom data
+      if (!loadedCustomPrompt.id) {
+        // Something is wrong as we have a custom prompt set but it hasn't filled the custom prompt data
+        return alert(
+          "Unable to load your request because the custom prompt is not properly set."
+        );
+      }
+      messageHistory[aiIndex].promptId = loadedCustomPrompt.id;
+    }
+
     const prompt = prompts.find((p) => p.id === select.elm.value) || prompts[0];
 
     // console.log(messageHistory[aiIndex], prompt);
@@ -2227,7 +2296,7 @@ window.addEventListener("load", async function () {
     deleteConvoButton.elm.disabled = false;
 
     await checkRequests();
-    updaterequestsMessage();
+    updateRequestsMessage();
   }
 
   function scrollDown() {

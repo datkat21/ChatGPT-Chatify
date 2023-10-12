@@ -37,6 +37,242 @@ body {
   --separator: #666;
 }
 
+:root[data-theme="light"] {
+  --accent: #78cfa7 !important;
+  --meter: #78cfa7 !important;
+  --input-background-color: #343541 !important;
+  --input-border: #343541 !important;
+  --button-background-color: #202123 !important;
+  --button-neutral-color: #23232a !important;
+  --button-transparent-color: #202123 !important;
+  --button-danger-color: #840c0c !important;
+  --text-color: #000000 !important;
+  --background-default: #ffffff !important;
+  --background-dim: #f7f7f8 !important;
+  --background-dimmer: #e3e3e3 !important;
+  --transparent-border: #d9d9e3 !important;
+  --background-light: #f4f4f4 !important;
+  --tab-selector: #202123 !important;
+  --tab-selected: #343541 !important;
+  --transparent-border-alt: #d9d9e3 !important;
+  --text-color-accent: #54a348 !important;
+  --separator: #666 !important;
+  --code-block: rgb(26, 29, 35);
+  --code-block-text: #ffffff;
+  --sidebar-bg: #202123 !important;
+  --sidebar-fg: #fff !important;
+  --button-text-color: #ffffff;
+  --transparent-btn-border: var(--input-border);
+  --transparent-btn-hover: #343541;
+}
+
+:root[data-theme="amoled"] {
+  --accent: #626262 !important;
+  --meter: #626262 !important;
+  --input-background-color: #00000000 !important;
+  --input-border: rgb(84, 84, 84) !important;
+  --button-background-color: #fff1 !important;
+  --button-neutral-color: #50505041 !important;
+  --button-transparent-color: #50505000 !important;
+  --button-danger-color: #6d2828 !important;
+  --text-color: #fff !important;
+  --background-default: #000 !important;
+  --background-dim: #000 !important;
+  --background-dimmer: #000 !important;
+  --transparent-border: #fff3 !important;
+  --background-light: #000 !important;
+  --tab-selector: #000 !important;
+  --tab-selected: #222 !important;
+  --transparent-border-alt: #181818 !important;
+  --text-color-accent: #626262 !important;
+  --separator: #fff !important;
+  --code-block: #000;
+}
+
+:root[data-theme="forest"] {
+  --accent: hsl(118, 80%, 40%);
+  --meter: hsl(118, 80%, 40%);
+  --input-background-color: hsl(118, 26%, 11%);
+  --input-border: hsl(118, 23%, 22%);
+  --button-background-color: hsl(118, 35%, 25%);
+  --button-neutral-color: #50505041;
+  --button-transparent-color: #50505000;
+  --button-danger-color: #4b1212;
+  --text-color: #ffffff;
+  --background-default: hsl(118, 25%, 8%);
+  --background-dim: hsl(118, 31%, 5%);
+  --background-dimmer: hsl(118, 31%, 5%);
+  --transparent-border: hsl(118, 23%, 22%);
+  --background-light: hsl(118, 28%, 12%);
+  --tab-selector: hsl(118, 25%, 8%);
+  --tab-selected: hsl(118, 35%, 25%);
+  --transparent-border-alt: hsl(118, 23%, 22%);
+  --text-color-accent: hsl(118, 43%, 72%);
+  --separator: hsl(118, 43%, 72%);
+  --code-block: hsl(118, 33%, 17%);
+}
+
+:root[data-theme="azure"] {
+  --accent: #1445b8;
+  --meter: #1445b8;
+  --input-background-color: #141822;
+  --input-border: #2b3345;
+  --button-background-color: #2a3858;
+  --button-neutral-color: #50505041;
+  --button-transparent-color: #50505000;
+  --button-danger-color: #4b1212;
+  --text-color: #ffffff;
+  --background-default: #0f1219;
+  --background-dim: #090c11;
+  --background-dimmer: #090c11;
+  --transparent-border: #2b3345;
+  --background-light: #161b27;
+  --tab-selector: #0f1219;
+  --tab-selected: #2a3858;
+  --transparent-border-alt: #2b3345;
+  --text-color-accent: #99acd6;
+  --separator: #99acd6;
+  --code-block: rgb(30 41 59);
+}
+
+:root[data-theme="orchid"] {
+  --accent: hsl(260, 80%, 40%);
+  --meter: hsl(260, 80%, 40%);
+  --input-background-color: hsl(260, 26%, 11%);
+  --input-border: hsl(260, 23%, 22%);
+  --button-background-color: hsl(260, 35%, 25%);
+  --button-neutral-color: #50505041;
+  --button-transparent-color: #50505000;
+  --button-danger-color: #4b1212;
+  --text-color: #ffffff;
+  --background-default: hsl(260, 25%, 8%);
+  --background-dim: hsl(260, 31%, 5%);
+  --background-dimmer: hsl(260, 31%, 5%);
+  --transparent-border: hsl(260, 23%, 22%);
+  --background-light: hsl(260, 28%, 12%);
+  --tab-selector: hsl(260, 25%, 8%);
+  --tab-selected: hsl(260, 35%, 25%);
+  --transparent-border-alt: hsl(260, 23%, 22%);
+  --text-color-accent: hsl(260, 43%, 72%);
+  --separator: hsl(260, 43%, 72%);
+  --code-block: hsl(260, 33%, 17%);
+}
+
+:root[data-theme="maroon"] {
+  --accent: hsl(2, 80%, 40%);
+  --meter: hsl(2, 80%, 40%);
+  --input-background-color: hsl(2, 26%, 11%);
+  --input-border: hsl(2, 23%, 22%);
+  --button-background-color: hsl(2, 35%, 25%);
+  --button-neutral-color: #50505041;
+  --button-transparent-color: #50505000;
+  --button-danger-color: #4b1212;
+  --text-color: #ffffff;
+  --background-default: hsl(2, 25%, 8%);
+  --background-dim: hsl(2, 31%, 5%);
+  --background-dimmer: hsl(2, 31%, 5%);
+  --transparent-border: hsl(2, 23%, 22%);
+  --background-light: hsl(2, 28%, 12%);
+  --tab-selector: hsl(2, 25%, 8%);
+  --tab-selected: hsl(2, 35%, 25%);
+  --transparent-border-alt: hsl(2, 23%, 22%);
+  --text-color-accent: hsl(2, 43%, 72%);
+  --separator: hsl(2, 43%, 72%);
+  --code-block: hsl(2, 33%, 17%);
+}
+
+:root[data-theme="violet"] {
+  --accent: hsl(240, 80%, 40%);
+  --meter: hsl(240, 80%, 40%);
+  --input-background-color: hsl(240, 26%, 11%);
+  --input-border: hsl(240, 23%, 22%);
+  --button-background-color: hsl(240, 35%, 25%);
+  --button-neutral-color: #50505041;
+  --button-transparent-color: #50505000;
+  --button-danger-color: #4b1212;
+  --text-color: #ffffff;
+  --background-default: hsl(240, 25%, 8%);
+  --background-dim: hsl(240, 31%, 5%);
+  --background-dimmer: hsl(240, 31%, 5%);
+  --transparent-border: hsl(240, 23%, 22%);
+  --background-light: hsl(240, 28%, 12%);
+  --tab-selector: hsl(240, 25%, 8%);
+  --tab-selected: hsl(240, 35%, 25%);
+  --transparent-border-alt: hsl(240, 23%, 22%);
+  --text-color-accent: hsl(240, 43%, 72%);
+  --separator: hsl(240, 43%, 72%);
+  --code-block: hsl(240, 33%, 17%);
+}
+
+:root[data-theme="tangerine"] {
+  --accent: hsl(30, 80%, 40%);
+  --meter: hsl(30, 80%, 40%);
+  --input-background-color: hsl(30, 26%, 11%);
+  --input-border: hsl(30, 23%, 22%);
+  --button-background-color: hsl(30, 35%, 25%);
+  --button-neutral-color: #50505041;
+  --button-transparent-color: #50505000;
+  --button-danger-color: #4b1212;
+  --text-color: #ffffff;
+  --background-default: hsl(30, 25%, 8%);
+  --background-dim: hsl(30, 31%, 5%);
+  --background-dimmer: hsl(30, 31%, 5%);
+  --transparent-border: hsl(30, 23%, 22%);
+  --background-light: hsl(30, 28%, 12%);
+  --tab-selector: hsl(30, 25%, 8%);
+  --tab-selected: hsl(30, 35%, 25%);
+  --transparent-border-alt: hsl(30, 23%, 22%);
+  --text-color-accent: hsl(30, 43%, 72%);
+  --separator: hsl(30, 43%, 72%);
+  --code-block: hsl(30, 33%, 17%);
+}
+
+:root[data-theme="lemon"] {
+  --accent: hsl(60, 80%, 40%);
+  --meter: hsl(60, 80%, 40%);
+  --input-background-color: hsl(60, 26%, 11%);
+  --input-border: hsl(60, 23%, 22%);
+  --button-background-color: hsl(60, 35%, 25%);
+  --button-neutral-color: #50505041;
+  --button-transparent-color: #50505000;
+  --button-danger-color: #4b1212;
+  --text-color: #ffffff;
+  --background-default: hsl(60, 25%, 8%);
+  --background-dim: hsl(60, 31%, 5%);
+  --background-dimmer: hsl(60, 31%, 5%);
+  --transparent-border: hsl(60, 23%, 22%);
+  --background-light: hsl(60, 28%, 12%);
+  --tab-selector: hsl(60, 25%, 8%);
+  --tab-selected: hsl(60, 35%, 25%);
+  --transparent-border-alt: hsl(60, 23%, 22%);
+  --text-color-accent: hsl(60, 43%, 72%);
+  --separator: hsl(60, 43%, 72%);
+  --code-block: hsl(60, 33%, 17%);
+}
+
+:root[data-theme="lavender"] {
+  --accent: #4028d2;
+  --meter: #533dd6;
+  --input-background-color: #161518;
+  --input-border: #6c6b6e66;
+  --button-background-color: #4028d2;
+  --button-neutral-color: #50505041;
+  --button-transparent-color: #50505000;
+  --button-danger-color: #5a0808;
+  --text-color: #ffffff;
+  --background-default: #1d1c20;
+  --background-dim: #1a191d;
+  --background-dimmer: #161518;
+  --transparent-border: #fff3;
+  --background-light: #1d1c20;
+  --tab-selector: #1d1c20;
+  --tab-selected: #333236;
+  --transparent-border-alt: #8e8d8f22;
+  --text-color-accent: #8373e2;
+  --separator: #676574;
+  --code-block: #161518;
+}
+
 a {
   color: #40b781;
   text-decoration: none;

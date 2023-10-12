@@ -171,6 +171,7 @@ export const getText = async (
 
     let result = "";
     for await (const part of stream) {
+      if (part.choices[0].delta.content === undefined) continue;
       result += part.choices[0].delta.content;
       if (part.choices[0].delta.content) {
         callback(part.choices[0].delta.content);

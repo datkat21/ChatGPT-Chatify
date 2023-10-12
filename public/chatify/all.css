@@ -648,7 +648,7 @@ body > .messages-wrapper > .messages > .message.user .icon {
 
 .icon {
   background-color: transparent;
-  background-image: var(--icon, url("./assets/avatars/custom.svg"));
+  background-image: var(--icon, url("./assets/avatars/builtin/custom.svg"));
   background-size: 32px 32px;
 }
 
@@ -661,7 +661,7 @@ body > .messages-wrapper > .messages > .message.user .icon {
 }
 
 a {
-  color: var(--accent);
+  color: var(--meter);
   text-decoration: none;
   cursor: pointer;
 }
@@ -1214,5 +1214,8 @@ pre {
 }
 
 [data-show-copy-button="false"] .message .column > :nth-child(2) {
+  display: none;
+}
+[data-show-edit-button="false"] .message .column > :nth-child(3) {
   display: none;
 }
