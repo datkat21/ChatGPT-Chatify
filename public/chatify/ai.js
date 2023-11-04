@@ -893,14 +893,25 @@ window.addEventListener("load", async function () {
           });
 
         controlsBox.appendMany(
-          new Html("button")
-            .text("Create your own prompt")
-            .classOn("fg-auto")
-            .on("click", (e) => {
-              setPrompt({ id: "custom", label: "Custom" });
-              modal.hide();
-              resolve("custom");
-            }),
+          new Html("div").class("row", "py-0").appendMany(
+            new Html("button")
+              .text("Create your own prompt")
+              .classOn("fg-auto")
+              .on("click", (e) => {
+                setPrompt({ id: "custom", label: "Custom" });
+                modal.hide();
+                resolve("custom");
+              }),
+            new Html("button")
+              .text("Scroll to bottom")
+              .classOn("transparent", "fg-auto")
+              .on("click", (e) => {
+                modal.modal.elm.scrollTo({
+                  top: modal.modal.elm.scrollHeight,
+                  behavior: "smooth",
+                });
+              })
+          ),
           searchBar
         );
 
@@ -1006,6 +1017,20 @@ window.addEventListener("load", async function () {
             break;
         }
       } else tabTransition(promptsTab_builtInButton, promptsTab_builtInTab);
+
+      // controlsBox.appendMany(
+      //   new Html("div").class("row", "py-0").appendMany(
+      //     new Html("button")
+      //       .text("Scroll to top")
+      //       .classOn("transparent", "fg-auto")
+      //       .on("click", (e) => {
+      //         modal.modal.elm.scrollTo({
+      //           top: 0,
+      //           behavior: "smooth",
+      //         });
+      //       })
+      //   ),
+      // );
 
       const modal = new Modal(modalContent);
       modal.show();
@@ -2260,11 +2285,10 @@ window.addEventListener("load", async function () {
       // Custom prompts handle differently than normal ones, so we save custom data
       if (!loadedCustomPrompt.id) {
         // Something is wrong as we have a custom prompt set but it hasn't filled the custom prompt data
-        return alert(
-          "Unable to load your request because the custom prompt is not properly set."
-        );
-      }
-      messageHistory[aiIndex].promptId = loadedCustomPrompt.id;
+        // return alert(
+        //   "Unable to load your request because the custom prompt is not properly set."
+        // );
+      } else messageHistory[aiIndex].promptId = loadedCustomPrompt.id;
     }
 
     const prompt = prompts.find((p) => p.id === select.elm.value) || prompts[0];
