@@ -27,6 +27,8 @@ This document will update alongside the changelogs that come with each new versi
     - [Known Bugs](#known-bugs)
   - [v0.6.1](#v061)
     - [Known Bugs](#known-bugs-1)
+  - [v0.6.2](#v062)
+  - [v0.6.3](#v063)
 
 ## v0.3.7
 
@@ -148,3 +150,13 @@ This document will update alongside the changelogs that come with each new versi
 ### Known Bugs
 
 - Toggling the edit button won't work until you open the settings menu
+
+## v0.6.2
+
+- Fixed an accidental issue relating to custom prompts
+- Added handy scroll to bottom button for people who have a long list of prompts
+- Minor improvements
+
+## v0.6.3
+
+To keep consistency with git, I accidentally wrote 0.6.3 as the 0.6.2 changelog. Whoops.
