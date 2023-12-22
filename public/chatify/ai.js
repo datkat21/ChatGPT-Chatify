@@ -1315,7 +1315,6 @@ window.addEventListener("load", async function () {
         const ta = new Html("textarea").attr({
           rows: 8,
           placeholder: "{ ... }",
-          readonly: true,
         });
 
         let modalContent;
