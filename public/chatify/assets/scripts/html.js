@@ -6,12 +6,11 @@ export default class Html {
    * @param elm The HTML element to be created or classified from.
    */
   constructor(elm) {
-      if (elm instanceof HTMLElement) {
-          this.elm = elm;
-      }
-      else {
-          this.elm = document.createElement(elm || "div");
-      }
+    if (elm instanceof HTMLElement) {
+      this.elm = elm;
+    } else {
+      this.elm = document.createElement(elm || "div");
+    }
   }
   /**
    * Sets the text of the current element.
@@ -19,8 +18,8 @@ export default class Html {
    * @returns Html
    */
   text(val) {
-      this.elm.innerText = val;
-      return this;
+    this.elm.innerText = val;
+    return this;
   }
   /**
    * Sets the text of the current element.
@@ -28,16 +27,16 @@ export default class Html {
    * @returns Html
    */
   html(val) {
-      this.elm.innerHTML = val;
-      return this;
+    this.elm.innerHTML = val;
+    return this;
   }
   /**
    * Safely remove the element. Can be used in combination with a `.swapRef()` to achieve a "delete & swap" result.
    * @returns Html
    */
   cleanup() {
-      this.elm.remove();
-      return this;
+    this.elm.remove();
+    return this;
   }
   /**
    * querySelector something.
@@ -45,15 +44,42 @@ export default class Html {
    * @returns The HTML element (not as Html)
    */
   query(selector) {
-      return this.elm.querySelector(selector);
+    return this.elm.querySelector(selector);
   }
   /**
-   * querySelector something and get Html access to it.
-   * @param selector The query selector.
-   * @returns The HTML element (as Html)
+   * An easier querySelector method.
+   * @param query The string to query
+   * @returns a new Html
    */
-  queryHtml(selector) {
-      return new Html(this.elm.querySelector(selector));
+  qs(query) {
+    if (this.elm.querySelector(query)) {
+      return Html.from(this.elm.querySelector(query));
+    } else {
+      return null;
+    }
+  }
+  /**
+   * An easier querySelectorAll method.
+   * @param query The string to query
+   * @returns a new Html
+   */
+  qsa(query) {
+    if (this.elm.querySelector(query)) {
+      return Array.from(this.elm.querySelectorAll(query)).map((e) =>
+        Html.from(e)
+      );
+    } else {
+      return null;
+    }
+  }
+  /**
+   * Sets the ID of the element.
+   * @param val The ID to set.
+   * @returns Html
+   */
+  id(val) {
+    this.elm.id = val;
+    return this;
   }
   /**
    * Toggle on/off a class.
@@ -61,10 +87,10 @@ export default class Html {
    * @returns Html
    */
   class(...val) {
-      for (let i = 0; i < val.length; i++) {
-          this.elm.classList.toggle(val[i]);
-      }
-      return this;
+    for (let i = 0; i < val.length; i++) {
+      this.elm.classList.toggle(val[i]);
+    }
+    return this;
   }
   /**
    * Toggles ON a class.
@@ -72,10 +98,10 @@ export default class Html {
    * @returns Html
    */
   classOn(...val) {
-      for (let i = 0; i < val.length; i++) {
-          this.elm.classList.add(val[i]);
-      }
-      return this;
+    for (let i = 0; i < val.length; i++) {
+      this.elm.classList.add(val[i]);
+    }
+    return this;
   }
   /**
    * Toggles OFF a class.
@@ -83,10 +109,10 @@ export default class Html {
    * @returns Html
    */
   classOff(...val) {
-      for (let i = 0; i < val.length; i++) {
-          this.elm.classList.remove(val[i]);
-      }
-      return this;
+    for (let i = 0; i < val.length; i++) {
+      this.elm.classList.remove(val[i]);
+    }
+    return this;
   }
   /**
    * Apply CSS styles (dashed method.) Keys use CSS syntax, e.g. `background-color`.
@@ -94,10 +120,10 @@ export default class Html {
    * @returns Html
    */
   style(obj) {
-      for (const key of Object.keys(obj)) {
-          this.elm.style.setProperty(key, obj[key]);
-      }
-      return this;
+    for (const key of Object.keys(obj)) {
+      this.elm.style.setProperty(key, obj[key]);
+    }
+    return this;
   }
   /**
    * Apply CSS styles (JS method.) Keys use JS syntax, e.g. `backgroundColor`.
@@ -105,11 +131,11 @@ export default class Html {
    * @returns Html
    */
   styleJs(obj) {
-      for (const key of Object.keys(obj)) {
-          //@ts-ignore No other workaround I could find.
-          this.elm.style[key] = obj[key];
-      }
-      return this;
+    for (const key of Object.keys(obj)) {
+      //@ts-ignore No other workaround I could find.
+      this.elm.style[key] = obj[key];
+    }
+    return this;
   }
   /**
    * Apply an event listener.
@@ -118,8 +144,8 @@ export default class Html {
    * @returns Html
    */
   on(ev, cb) {
-      this.elm.addEventListener(ev, cb);
-      return this;
+    this.elm.addEventListener(ev, cb);
+    return this;
   }
   /**
    * Remove an event listener.
@@ -128,8 +154,8 @@ export default class Html {
    * @returns Html
    */
   un(ev, cb) {
-      this.elm.removeEventListener(ev, cb);
-      return this;
+    this.elm.removeEventListener(ev, cb);
+    return this;
   }
   /**
    * Append this element to another element. Uses `appendChild()` on the parent.
@@ -137,16 +163,14 @@ export default class Html {
    * @returns Html
    */
   appendTo(parent) {
-      if (parent instanceof HTMLElement) {
-          parent.appendChild(this.elm);
-      }
-      else if (parent instanceof Html) {
-          parent.elm.appendChild(this.elm);
-      }
-      else if (typeof parent === "string") {
-          document.querySelector(parent)?.appendChild(this.elm);
-      }
-      return this;
+    if (parent instanceof HTMLElement) {
+      parent.appendChild(this.elm);
+    } else if (parent instanceof Html) {
+      parent.elm.appendChild(this.elm);
+    } else if (typeof parent === "string") {
+      document.querySelector(parent)?.appendChild(this.elm);
+    }
+    return this;
   }
   /**
    * Append an element. Typically used as a `.append(new Html(...))` call.
@@ -154,18 +178,16 @@ export default class Html {
    * @returns Html
    */
   append(elem) {
-      if (elem instanceof HTMLElement) {
-          this.elm.appendChild(elem);
-      }
-      else if (elem instanceof Html) {
-          this.elm.appendChild(elem.elm);
-      }
-      else if (typeof elem === "string") {
-          const newElem = document.createElement(elem);
-          this.elm.appendChild(newElem);
-          return new Html(newElem.tagName);
-      }
-      return this;
+    if (elem instanceof HTMLElement) {
+      this.elm.appendChild(elem);
+    } else if (elem instanceof Html) {
+      this.elm.appendChild(elem.elm);
+    } else if (typeof elem === "string") {
+      const newElem = document.createElement(elem);
+      this.elm.appendChild(newElem);
+      return new Html(newElem.tagName);
+    }
+    return this;
   }
   /**
    * Append multiple elements. Typically used as a `.appendMany(new Html(...), new Html(...)` call.
@@ -173,18 +195,18 @@ export default class Html {
    * @returns Html
    */
   appendMany(...elements) {
-      for (const elem of elements) {
-          this.append(elem);
-      }
-      return this;
+    for (const elem of elements) {
+      this.append(elem);
+    }
+    return this;
   }
   /**
    * Clear the innerHTML of the element.
    * @returns Html
    */
   clear() {
-      this.elm.innerHTML = "";
-      return this;
+    this.elm.innerHTML = "";
+    return this;
   }
   /**
    * Set attributes (object method.)
@@ -192,13 +214,14 @@ export default class Html {
    * @returns Html
    */
   attr(obj) {
-      for (let key in obj) {
-          if (obj[key] !== null && obj[key] !== undefined)
-              this.elm.setAttribute(key, obj[key]);
-          else
-              this.elm.removeAttribute(key);
+    for (let key in obj) {
+      if (obj[key] !== null && obj[key] !== undefined) {
+        this.elm.setAttribute(key, obj[key]);
+      } else {
+        this.elm.removeAttribute(key);
       }
-      return this;
+    }
+    return this;
   }
   /**
    * Set the text value of the element. Only works if element is `input` or `textarea`.
@@ -206,30 +229,30 @@ export default class Html {
    * @returns Html
    */
   val(str) {
-      var x = this.elm;
-      x.value = str;
-      return this;
+    var x = this.elm;
+    x.value = str;
+    return this;
   }
   /**
    * Retrieve text content from the element. (as innerText, not trimmed)
    * @returns string
    */
   getText() {
-      return this.elm.innerText;
+    return this.elm.innerText;
   }
   /**
    * Retrieve HTML content from the element.
    * @returns string
    */
   getHtml() {
-      return this.elm.innerHTML;
+    return this.elm.innerHTML;
   }
   /**
    * Retrieve the value of the element. Only applicable if it is an `input` or `textarea`.
    * @returns string
    */
   getValue() {
-      return this.elm.value;
+    return this.elm.value;
   }
   /**
    * Swap the local `elm` with a new HTMLElement.
@@ -237,8 +260,8 @@ export default class Html {
    * @returns Html
    */
   swapRef(elm) {
-      this.elm = elm;
-      return this;
+    this.elm = elm;
+    return this;
   }
   /**
    * An alternative method to create an Html instance.
@@ -246,7 +269,13 @@ export default class Html {
    * @returns Html
    */
   static from(elm) {
+    if (typeof elm === "string") {
+      const element = Html.qs(elm);
+      if (element === null) return null;
+      else return element;
+    } else {
       return new Html(elm);
+    }
   }
   /**
    * An easier querySelector method.
@@ -254,12 +283,11 @@ export default class Html {
    * @returns a new Html
    */
   static qs(query) {
-      if (document.querySelector(query)) {
-          return Html.from(document.querySelector(query));
-      }
-      else {
-          return null;
-      }
+    if (document.querySelector(query)) {
+      return Html.from(document.querySelector(query));
+    } else {
+      return null;
+    }
   }
   /**
    * An easier querySelectorAll method.
@@ -267,11 +295,12 @@ export default class Html {
    * @returns a new Html
    */
   static qsa(query) {
-      if (document.querySelector(query)) {
-          return Array.from(document.querySelectorAll(query)).map(e => Html.from(e));
-      }
-      else {
-          return null;
-      }
+    if (document.querySelector(query)) {
+      return Array.from(document.querySelectorAll(query)).map((e) =>
+        Html.from(e)
+      );
+    } else {
+      return null;
+    }
   }
 }
