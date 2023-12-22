@@ -448,10 +448,10 @@ window.addEventListener("load", async function () {
     maxTokens: "2048",
   };
 
-  function loadUserSettings() {
+  function loadUserSettings(
+    us = JSON.parse(localStorage.getItem("user-settings"))
+  ) {
     try {
-      let us = JSON.parse(localStorage.getItem("user-settings"));
-
       if (us.promptPrefix !== undefined)
         userSettings["promptPrefix"] = us.promptPrefix;
       if (us.promptPrefixEnabled !== undefined)
@@ -1229,6 +1229,142 @@ window.addEventListener("load", async function () {
     .class("fg")
     .appendTo(multiRow)
     .on("click", () => {
+      const manageSettingsDiv = new Html("div").class("row");
+
+      const importSettingsBtn = new Html("button")
+        .class("fg-auto")
+        .text("Import Settings");
+      const exportSettingsBtn = new Html("button")
+        .class("fg-auto")
+        .text("Export Settings");
+
+      importSettingsBtn.on("click", (e) => {
+        let modal1;
+        const modalContainer = new Html()
+          .text(
+            "Are you sure you want to continue importing new settings?\nYou will lose ALL your prompts and saved settings."
+          )
+          .append(
+            new Html()
+              .classOn("fg-auto", "row")
+              .append(
+                new Html("button")
+                  .text("OK")
+                  .classOn("danger", "fg-auto")
+                  .on("click", (e) => {
+                    modal1.hide();
+
+                    const ta = new Html("textarea").attr({
+                      rows: 8,
+                      placeholder: "{ ... }",
+                    });
+
+                    const modalContent = new Html("div")
+                      .text("Import JSON configuration data:")
+                      .append(
+                        new Html().classOn("column").appendMany(
+                          ta,
+                          new Html("button")
+                            .text("Attempt Import")
+                            .classOn("fg-auto")
+                            .on("click", (e) => {
+                              let json;
+                              try {
+                                json = JSON.parse(ta.getValue());
+                                loadUserSettings(json);
+                                if (typeof json["promptList"] !== "undefined") {
+                                  // a bit of a lazy one
+                                  localStorage.setItem(
+                                    "prompts",
+                                    JSON.stringify(json["promptList"])
+                                  );
+                                }
+                                modal2.hide();
+
+                                // another lazy
+                                modal.hide();
+                                userSettingsBtn.elm.click();
+                                saveUserSettings();
+                              } catch (e) {
+                                modal2.hide();
+                              }
+                              // modal2.hide();
+                            })
+                        )
+                      );
+
+                    const modal2 = new Modal(modalContent);
+                    modal2.show();
+                  })
+              )
+              .append(
+                new Html("button")
+                  .text("Cancel")
+                  .classOn("fg-auto")
+                  .on("click", (e) => {
+                    modal1.hide();
+                  })
+              )
+          );
+
+        modal1 = new Modal(modalContainer);
+        modal1.show();
+      });
+
+      exportSettingsBtn.on("click", (e) => {
+        const ta = new Html("textarea").attr({
+          rows: 8,
+          placeholder: "{ ... }",
+          readonly: true,
+        });
+
+        let modalContent;
+
+        try {
+          ta.val(
+            JSON.stringify(
+              Object.assign(JSON.parse(localStorage.getItem("user-settings")), {
+                promptList: JSON.parse(localStorage.getItem("prompts")),
+              })
+            )
+          );
+
+          modalContent = new Html("div")
+          .text("Here's your exported configuration data:")
+          .append(
+            new Html().classOn("column").appendMany(
+              ta,
+              new Html("button")
+                .text("OK")
+                .classOn("fg-auto")
+                .on("click", (e) => {
+                  modal2.hide();
+                })
+            )
+          );
+        } catch (e) {
+          modalContent = new Html("div")
+          .text("Unable to export configuration due to parsing error:\n" + e)
+          .append(
+            new Html().classOn("column").appendMany(
+              new Html("button")
+                .text("OK")
+                .classOn("fg-auto")
+                .on("click", (e) => {
+                  modal2.hide();
+                })
+            )
+          );
+        }
+
+
+
+        const modal2 = new Modal(modalContent);
+        modal2.show();
+      });
+
+      manageSettingsDiv.appendMany(importSettingsBtn, exportSettingsBtn);
+
       // User name input
       const usernameInput = new Html("input")
         .attr({
@@ -1640,6 +1776,7 @@ window.addEventListener("load", async function () {
       const modalContent = new Html("div")
         .classOn("col")
         .appendMany(
+          manageSettingsDiv,
           new Html("fieldset").appendMany(
             new Html("legend").text("Personalization"),
             new Html("span").classOn("pb-2", "flex").text("Username"),
