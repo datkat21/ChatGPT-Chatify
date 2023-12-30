@@ -60,6 +60,79 @@ export function encodedLengths(messages, model = "gpt-3.5-turbo-0301") {
   }
 }
 
+// UNTESTED API: Since I cannot comprehend this codebase, I'll put this function here that enables group chats.
+// This is untested however, and may behave VERY differently in this environment.
+
+let fuzzySearch = FuzzySet();
+
+async function getPersonalities(text, characters, prevTalkingTo = null) {
+  let charsString = "";
+  let first = true;
+  let newPrompt = "";
+
+  if (prevTalkingTo) {
+    newPrompt =
+      "Previously talking to: " + JSON.stringify(prevTalkingTo) + "\n";
+  }
+
+  newPrompt = newPrompt + "Current message:" + text;
+
+  characters.forEach((character) => {
+    fuzzySearch.add(character.name);
+    if (first) {
+      charsString = charsString + character.name;
+      first = false;
+    } else {
+      charsString = charsString + ", " + character.name;
+    }
+  });
+
+  let chat = await openai.chat.completions.create({
+    model: "gpt-4-1106-preview",
+    messages: [
+      {
+        role: "system",
+        content:
+          "You're going to roleplay as characters in a game. Please be guided by running the getPersonality function, and by inputting the player's message and what you think the player is talking to.",
+      },
+      {
+        role: "user",
+        content: newPrompt,
+      },
+    ],
+    functions: [
+      {
+        name: "getPersonality",
+        description: "Get character personality based on input",
+        parameters: {
+          type: "object",
+          properties: {
+            toWho: {
+              type: "array",
+              description:
+                "Who to get personality from (" +
+                charsString +
+                "). As this is an array, you can put multiple characters.",
+              items: {
+                type: "string",
+                description: "The name of the character added",
+              },
+            },
+            inputMessage: {
+              type: "string",
+              description: "The message inputted by the user",
+            },
+          },
+        },
+        required: ["toWho", "inputMessage"],
+      },
+    ],
+    function_call: { name: "getPersonality" },
+  });
+  let msgData = chat.choices[0].message;
+  return msgData;
+}
+
 export const getText = async (
   system,
   context,
