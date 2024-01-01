@@ -8,6 +8,7 @@ config();
 import { fileURLToPath } from "url";
 import path from "path";
 import { existsSync, mkdirSync, readFileSync, readdirSync } from "fs";
+import FuzzySet from "fuzzyset";
 
 log("Successfully loaded necessary modules.");
 
@@ -141,9 +142,12 @@ app.get("/hdr", (req, res) => {
   res.json(req.headers);
 });
 
-app.use("/api", express.json({
-  limit: '5mb'
-}));
+app.use(
+  "/api",
+  express.json({
+    limit: "5mb",
+  })
+);
 
 app.get("/api/usage", (req, res) => {
   const ip = getIp(req);
