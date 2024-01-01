@@ -5,6 +5,7 @@ import { cwd } from "process";
 import * as path from "path";
 import OpenAI from "openai";
 import { inspect } from "util";
+import FuzzySet from "fuzzyset";
 config();
 
 const openAI = new OpenAI({
@@ -87,7 +88,7 @@ async function getPersonalities(text, characters, prevTalkingTo = null) {
     }
   });
 
-  let chat = await openai.chat.completions.create({
+  let chat = await openAI.chat.completions.create({
     model: "gpt-4-1106-preview",
     messages: [
       {
@@ -303,7 +304,7 @@ export const generateResponse = async (
                   "Bad promptPrefix data, remove it or make it a string"
                 );
               const encL = userSettings.promptPrefix.length;
-              if (encL > 4096)
+              if (encL > 5172) // slightly longer prompt prefix
                 return callbackError(
                   "Your prompt prefix is too long, the server won't accept it."
                 );
@@ -475,7 +476,7 @@ If any of the above show an "X", double-check your parameters.`);
       callbackData({
         error: true,
         errorMessage:
-          "A server-side error occured. Please ask the owner of this instance to check the logs.",
+          "A server-side error occurred. Please ask the owner of this instance to check the logs.",
       });
       log(`[ERROR] ${e} while streaming ${ip}\n\n${e.stack}`);
     }

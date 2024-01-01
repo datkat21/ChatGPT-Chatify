@@ -30,6 +30,7 @@ This document will update alongside the changelogs that come with each new versi
   - [v0.6.2](#v062)
   - [v0.6.3](#v063)
   - [v0.6.4](#v064)
+  - [v0.7](#v07)
 
 ## v0.3.7
 
@@ -166,3 +167,16 @@ To keep consistency with git, I accidentally wrote 0.6.3 as the 0.6.2 changelog.
 
 - Added import and export buttons to the settings menu
 - WIP language support, will be coming in a future date
+
+## v0.7
+
+This update consists of many codebase changes and adds many features.
+The prominent codebase change is converting the single file codebase into a more diverse one split into many files. The files are then bundled back into one, making it work basically the same. 
+I build using this script:
+```bash
+bun build --minify ai.js > ai.min.js
+```
+I plan to convert to TypeScript eventually, whenever I feel like it.
+
+Features:
+- Fixed a long-lasting bug regarding custom names

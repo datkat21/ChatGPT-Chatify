@@ -16,6 +16,7 @@
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "express-ws": "^5.0.2",
+    "fuzzyset": "^1.0.7",
     "marked": "^5.1.0",
     "marked-gfm-heading-id": "^3.0.4",
     "openai": "^4.0.0-beta.0",

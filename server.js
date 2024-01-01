@@ -8,7 +8,6 @@ config();
 import { fileURLToPath } from "url";
 import path from "path";
 import { existsSync, mkdirSync, readFileSync, readdirSync } from "fs";
-import FuzzySet from "fuzzyset";
 
 log("Successfully loaded necessary modules.");
 
@@ -162,8 +161,8 @@ app.get("/api/usage", (req, res) => {
   });
 });
 
-const ver = "v0.6.4";
-const sub = "(2023-12-22)";
+const ver = "v0.7.0";
+const sub = "(2024-01-01)";
 
 import { marked } from "marked";
 import { gfmHeadingId } from "marked-gfm-heading-id";
