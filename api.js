@@ -100,6 +100,11 @@ export async function getPersonalities(text, characters, prevTalkingTo = null) {
           role: "user",
           content: newPrompt,
         },
+        {
+          role: "system",
+          content:
+            "Always remember that if the player mentions more than one person, ALWAYS SELECT MORE THAN ONE PERSON. That is very important! If the player mentions more than one person, answer starting with the most likely person to answer the user's question.",
+        },
       ],
       functions: [
         {
