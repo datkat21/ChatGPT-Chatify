@@ -293,6 +293,12 @@ export async function request(text: string, addUserMessage = true) {
     for (let i = 0; i < finalResponse.length; i++) {
       const currentPrompt = finalResponse[i];
 
+      store.get("messageHistory").push({
+        role: "user",
+        name: store.get("userSettings").username,
+        content: `Respond as ${currentPrompt}.`,
+      }) - 1;
+
       const aiIndex =
         store.get("messageHistory").push({
           role: "assistant",
