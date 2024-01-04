@@ -274,9 +274,11 @@ export async function request(text: string, addUserMessage = true) {
       body: JSON.stringify({
         prompt: text.substring(0, 1024),
         characters: mpGetPromptsSelected().map((p) => p.displayName),
-        prevTalkingTo: null,
+        prevTalkingTo: store.get("select").elm.value,
       }),
     });
+
+    let prevTalkingTo: string | null = null;
 
     finalResponse = await personalities.json();
 
@@ -296,15 +298,11 @@ export async function request(text: string, addUserMessage = true) {
       store.get("messageHistory").push({
         role: "user",
         name: store.get("userSettings").username,
-        content: `Respond as ${currentPrompt}.`,
+        content:
+          prevTalkingTo != null
+            ? `Respond as ${currentPrompt} after ${prevTalkingTo}.`
+            : `Respond as ${currentPrompt}.`,
       }) - 1;
-
-      const aiIndex =
-        store.get("messageHistory").push({
-          role: "assistant",
-          type: store.get("select").elm.value,
-          content: "Thinking...",
-        }) - 1;
 
       const prompt = (store.get("prompts") as Prompt[]).find(
         (p) => p.displayName === currentPrompt
@@ -334,6 +332,15 @@ export async function request(text: string, addUserMessage = true) {
         setPrompt(prompt, false);
       }
 
+      const aiIndex =
+        store.get("messageHistory").push({
+          role: "assistant",
+          type: store.get("select").elm.value,
+          content: "Thinking...",
+        }) - 1;
+
+      console.log("Selected prompt vs current prompt:", currentPrompt, prompt);
+
       let ai = makeMessage(1, "", aiIndex, prompt);
 
       isTyping = true;
@@ -349,6 +356,7 @@ export async function request(text: string, addUserMessage = true) {
       updateState();
 
       store.get("deleteConvoButton").elm.disabled = false;
+      prevTalkingTo = currentPrompt;
     }
   } else {
     // Default mode

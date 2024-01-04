@@ -94,7 +94,7 @@ export async function getPersonalities(text, characters, prevTalkingTo = null) {
         {
           role: "system",
           content:
-            "You're going to roleplay as characters in a game. Please be guided by running the getPersonality function, and by inputting the player's message and what you think the player is talking to.",
+            "You're going to roleplay as characters in a game. Please be guided by running the getPersonality function, and by inputting the player's message and what you think the player is talking to. If the player mentions \"everyone\", select everyone involved.",
         },
         {
           role: "user",

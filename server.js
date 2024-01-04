@@ -213,7 +213,7 @@ app.post("/api/getPersonality", express.json(), async (req, res) => {
   if (!Array.isArray(characters) || typeof prompt !== "string")
     return res.status(400).send("Bad request.");
 
-  console.log("Getting personality...");
+  // console.log("Getting personality...");
 
   const personality = await getPersonalities(
     prompt.substring(0, 1024), // to save on possible token waste
@@ -221,7 +221,7 @@ app.post("/api/getPersonality", express.json(), async (req, res) => {
     prevTalkingTo
   );
 
-  console.log(personality);
+  // console.log(personality);
 
   res.status(200).json(personality);
 });
