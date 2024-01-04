@@ -248,7 +248,23 @@ export async function request(text: string, addUserMessage = true) {
       return;
     }
 
-    let message = `${store.get("userName")}: ${String(text)}`;
+    // let message = `${store.get("userName")}: ${String(text)}`;
+
+    const userIndex =
+      store.get("messageHistory").push({
+        role: "user",
+        content: text,
+        name: store.get("userSettings").username,
+      }) - 1;
+
+    let human: Html = new Html("div");
+    if (addUserMessage === true) {
+      human = makeMessage(
+        0,
+        DOMPurify.sanitize(parseMarkdown(text)),
+        userIndex
+      );
+    }
 
     let finalResponse: string[] | false = false;
 
@@ -271,21 +287,6 @@ export async function request(text: string, addUserMessage = true) {
     }
 
     // This part only goes once
-    const userIndex =
-      store.get("messageHistory").push({
-        role: "user",
-        content: text,
-        name: store.get("userSettings").username,
-      }) - 1;
-
-    let human: Html = new Html("div");
-    if (addUserMessage === true) {
-      human = makeMessage(
-        0,
-        DOMPurify.sanitize(parseMarkdown(text)),
-        userIndex
-      );
-    }
     updateMessage(human.elm);
 
     // This part loops

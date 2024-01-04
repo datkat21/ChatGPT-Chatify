@@ -31,6 +31,7 @@ This document will update alongside the changelogs that come with each new versi
   - [v0.6.3](#v063)
   - [v0.6.4](#v064)
   - [v0.7.0](#v070)
+  - [v0.7.1](#v071)
 
 ## v0.3.7
 
@@ -180,3 +181,8 @@ I plan to convert to TypeScript eventually, whenever I feel like it.
 
 Features:
 - Fixed a long-lasting bug regarding custom names
+
+## v0.7.1
+
+- Converted the entire codebase to typescript, which took about 4 and a half hours.
+- Added multi-prompt beta feature.
