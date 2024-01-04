@@ -226,8 +226,8 @@ app.post("/api/getPersonality", express.json(), async (req, res) => {
   res.status(200).json(personality);
 });
 
-const ver = "v0.7.0";
-const sub = "(2024-01-01)";
+const ver = "v0.7.1";
+const sub = "(2024-01-04)";
 
 import { marked } from "marked";
 import { gfmHeadingId } from "marked-gfm-heading-id";
