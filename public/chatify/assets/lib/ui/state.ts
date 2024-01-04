@@ -295,18 +295,20 @@ export async function request(text: string, addUserMessage = true) {
     for (let i = 0; i < finalResponse.length; i++) {
       const currentPrompt = finalResponse[i];
 
+      const prompt = (store.get("prompts") as Prompt[]).find(
+        (p) => p.label === currentPrompt
+      );
+
       store.get("messageHistory").push({
         role: "user",
         name: store.get("userSettings").username,
         content:
           prevTalkingTo != null
-            ? `Your prompt has changed to ${currentPrompt}. Respond as ${currentPrompt} after ${prevTalkingTo} last talked.`
+            ? `You are now ${currentPrompt}. Respond as ${prompt?.displayName} after ${prevTalkingTo} last talked.`
             : `Respond as ${currentPrompt}.`,
       }) - 1;
 
-      const prompt = (store.get("prompts") as Prompt[]).find(
-        (p) => p.label === currentPrompt
-      );
+    
 
       if (prompt === undefined) {
         // search in custom prompts instead
