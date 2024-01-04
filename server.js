@@ -208,7 +208,7 @@ app.post("/api/getPersonality", express.json(), async (req, res) => {
   const characters = req.body.characters;
   const prevTalkingTo = req.body.prevTalkingTo;
 
-  console.log(prompt, characters, prevTalkingTo);
+  // console.log(prompt, characters, prevTalkingTo);
 
   if (!Array.isArray(characters) || typeof prompt !== "string")
     return res.status(400).send("Bad request.");

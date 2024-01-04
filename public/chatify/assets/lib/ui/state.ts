@@ -273,7 +273,7 @@ export async function request(text: string, addUserMessage = true) {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         prompt: text.substring(0, 1024),
-        characters: mpGetPromptsSelected().map((p) => p.displayName),
+        characters: mpGetPromptsSelected().map((p) => p.label),
         prevTalkingTo: store.get("select").elm.value,
       }),
     });
@@ -300,12 +300,12 @@ export async function request(text: string, addUserMessage = true) {
         name: store.get("userSettings").username,
         content:
           prevTalkingTo != null
-            ? `Respond as ${currentPrompt} after ${prevTalkingTo}.`
+            ? `Your prompt has changed to ${currentPrompt}. Respond as ${currentPrompt} after ${prevTalkingTo} last talked.`
             : `Respond as ${currentPrompt}.`,
       }) - 1;
 
       const prompt = (store.get("prompts") as Prompt[]).find(
-        (p) => p.displayName === currentPrompt
+        (p) => p.label === currentPrompt
       );
 
       if (prompt === undefined) {
