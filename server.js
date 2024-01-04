@@ -192,39 +192,42 @@ app.get("/api/usage", (req, res) => {
     total: plan.limit,
     expires: new Date(requestsMap.get(ip + "e")).toJSON(),
     plan: plan.label,
+    allowMultiPrompt: Config.default.options.ai.allowMultiPrompt,
   });
 });
 
-app.post("/api/getPersonality", express.json(), async (req, res) => {
-  if (rateLimitGP(getIp(req)) === true) {
-    return res.status(429).json({
-      error: true,
-      errorMessage: "Too Many Requests",
-      errorCode: "too_many_requests",
-    });
-  }
+if (Config.default.options.ai.allowMultiPrompt === true) {
+  app.post("/api/getPersonality", express.json(), async (req, res) => {
+    if (rateLimitGP(getIp(req)) === true) {
+      return res.status(429).json({
+        error: true,
+        errorMessage: "Too Many Requests",
+        errorCode: "too_many_requests",
+      });
+    }
 
-  const prompt = req.body.prompt;
-  const characters = req.body.characters;
-  const prevTalkingTo = req.body.prevTalkingTo;
+    const prompt = req.body.prompt;
+    const characters = req.body.characters;
+    const prevTalkingTo = req.body.prevTalkingTo;
 
-  // console.log(prompt, characters, prevTalkingTo);
+    // console.log(prompt, characters, prevTalkingTo);
 
-  if (!Array.isArray(characters) || typeof prompt !== "string")
-    return res.status(400).send("Bad request.");
+    if (!Array.isArray(characters) || typeof prompt !== "string")
+      return res.status(400).send("Bad request.");
 
-  // console.log("Getting personality...");
+    // console.log("Getting personality...");
 
-  const personality = await getPersonalities(
-    prompt.substring(0, 1024), // to save on possible token waste
-    characters,
-    prevTalkingTo
-  );
+    const personality = await getPersonalities(
+      prompt.substring(0, 1024), // to save on possible token waste
+      characters,
+      prevTalkingTo
+    );
 
-  // console.log(personality);
+    // console.log(personality);
 
-  res.status(200).json(personality);
-});
+    res.status(200).json(personality);
+  });
+}
 
 const ver = "v0.7.1";
 const sub = "(2024-01-04)";

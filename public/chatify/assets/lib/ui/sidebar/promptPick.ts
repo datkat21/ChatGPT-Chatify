@@ -273,19 +273,21 @@ export function promptPick(
                 behavior: "smooth",
               });
             }),
-          type === PromptPickType.Default
-            ? new Html("button")
-                .text(
-                  `Multi-prompt ${
-                    store.get("mpState") === true ? "(On)" : "(Off)"
-                  }`
-                )
-                .append(new Html("span").class("badge").text("BETA"))
-                .classOn("transparent", "fg-auto")
-                .on("click", () => {
-                  modal.hide();
-                  multiPromptUi();
-                })
+          store.get("apiUsage").allowMultiPrompt === true
+            ? type === PromptPickType.Default
+              ? new Html("button")
+                  .text(
+                    `Multi-prompt ${
+                      store.get("mpState") === true ? "(On)" : "(Off)"
+                    }`
+                  )
+                  .append(new Html("span").class("badge").text("BETA"))
+                  .classOn("transparent", "fg-auto")
+                  .on("click", () => {
+                    modal.hide();
+                    multiPromptUi();
+                  })
+              : undefined
             : undefined
         ),
         searchBar

@@ -7,6 +7,7 @@ let apiUsage = {
   total: 0,
   expires: "",
   plan: "free",
+  allowMultiPrompt: false
 };
 
 export async function checkRequests() {
