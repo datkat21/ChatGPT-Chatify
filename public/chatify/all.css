@@ -1234,3 +1234,7 @@ pre {
   padding: 10px;
   border-radius: 6px;
 }
+
+.wrap {
+  flex-wrap: wrap;
+}

@@ -110,7 +110,7 @@ export function promptPick(
             new Html("button").text("Select").on("click", () => {
               if (prp.type !== undefined && prp.type !== PromptType.Saved) {
                 setPrompt(prp, mkMsg);
-                store.set('currentPrompt', prp);
+                store.set("currentPrompt", prp);
                 modal.hide();
                 resolve(prp);
               } else {
@@ -255,7 +255,7 @@ export function promptPick(
         });
 
       controlsBox.appendMany(
-        new Html("div").class("row", "py-0").appendMany(
+        new Html("div").class("row", "py-0", "wrap").appendMany(
           new Html("button")
             .text("Create your own prompt")
             .classOn("fg-auto")
@@ -276,7 +276,9 @@ export function promptPick(
           type === PromptPickType.Default
             ? new Html("button")
                 .text(
-                  `Multi-prompt ${store.get("mpState") === true ? "(On)" : "(Off)"}`
+                  `Multi-prompt ${
+                    store.get("mpState") === true ? "(On)" : "(Off)"
+                  }`
                 )
                 .append(new Html("span").class("badge").text("BETA"))
                 .classOn("transparent", "fg-auto")
@@ -381,7 +383,12 @@ export function promptPick(
     const modalContent = new Html("div")
       .class("fg")
       .append(new Html("span").text("Prompt selection"))
-      .append(new Html("div").appendMany(tabsButtons).appendMany(tabsGroup));
+      .append(
+        new Html("div")
+          .class("flex-wrap")
+          .appendMany(tabsButtons)
+          .appendMany(tabsGroup)
+      );
 
     if (focusTab !== undefined) {
       switch (focusTab) {

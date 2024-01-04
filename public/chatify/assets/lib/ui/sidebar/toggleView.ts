@@ -39,7 +39,7 @@ export default function toggleButton(selectWrapper: Html) {
       // store.get("selectPromptBtn").classOff("extra-hidden");
       // store.get("debugVersionNumber").classOff("extra-hidden");
       // store.get("sideBar").classOff("mw-0");
-      store.set("menuState", false);
+      store.set("menuState", true);
       toggleBtn.classOff("flip");
       toggleBtn.classOn("flip-off");
       store.get("multiRow").classOff("extra-hidden");
