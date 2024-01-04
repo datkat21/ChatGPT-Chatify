@@ -1,4 +1,5 @@
 import { store } from "./_globals.js";
+import { makeMsgSeparator } from "./ui/separator.js";
 import { sendButton_StopGeneration } from "./ui/state.js";
 
 export function actuallyClearMessageHistory() {

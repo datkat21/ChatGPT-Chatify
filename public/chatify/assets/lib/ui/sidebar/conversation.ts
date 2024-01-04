@@ -1,9 +1,16 @@
-import Html from "../../../scripts/html.js";
+import Html from "@datkat21/html";
 import { store } from "../../_globals.js";
 import Modal from "../../modal.js";
-import { updateMessage } from "../state.js";
+import { makeMessage, updateMessage } from "../state.js";
+import DOMPurify from "../../../scripts/purify.min.js";
+import { Prompt, parseMarkdown } from "../../util.js";
+import { actuallyClearMessageHistory } from "../../clearMessageHistory.js";
+import { setPrompt } from "./promptPick.js";
+import { CustomPrompt, loadAssistant } from "../../assistant.js";
+import { importAndLoadPrompt } from "../../promptHandling.js";
+import { makeMsgSeparator } from "../separator.js";
 
-export default function convoButton(container) {
+export default function convoButton(container: HTMLElement | Html) {
   return new Html("button")
     .text("Conversation...")
     .class("fg")
@@ -12,29 +19,29 @@ export default function convoButton(container) {
       const modalContent = new Html("div")
         .text("What do you want to do?")
         .append(
-          new Html().classOn("row").appendMany(
+          new Html("div").classOn("row").appendMany(
             new Html("button")
               .text("Import")
               .classOn("fg-auto")
-              .on("click", (e) => {
-                // Take the config from the prompt and impot it ..
+              .on("click", (e: Event) => {
+                // Take the config from the prompt and import it ..
                 const ta = new Html("textarea").attr({
-                  rows: 8,
+                  rows: "8",
                   placeholder: '[ {"role": ..., "content": ...}, ... ]',
                 });
                 const modalContent = new Html("div")
                   .text("Import JSON data:")
                   .append(
-                    new Html().classOn("column").appendMany(
+                    new Html("div").classOn("column").appendMany(
                       ta,
                       new Html("button")
                         .text("Attempt Import")
                         .classOn("fg-auto")
-                        .on("click", (e) => {
+                        .on("click", () => {
                           try {
-                            const convo = JSON.parse(ta.elm.value);
+                            const convo = JSON.parse(ta.getValue());
                             if (
-                              this.confirm(
+                              confirm(
                                 "Are you sure you want to import?\nYou will lose your current conversation if it has not been saved."
                               ) === true
                             ) {
@@ -45,8 +52,9 @@ export default function convoButton(container) {
                                     if (m.role === "assistant") {
                                       if (
                                         m.type === "custom" ||
-                                        prompts.find((p) => p.id === m.type) !==
-                                          undefined
+                                        (store.get("prompts") as Prompt[]).find(
+                                          (p) => p.id === m.type
+                                        ) !== undefined
                                       ) {
                                         return true;
                                       }
@@ -62,22 +70,32 @@ export default function convoButton(container) {
                                 for (let i = 0; i < items.length; i++) {
                                   const item = items[i];
                                   setPrompt(
-                                    prompts.find((p) => p.id === item.type) ||
-                                      prompts[0],
+                                    store
+                                      .get("prompts")
+                                      .find(
+                                        (p: Prompt) => p.id === item.type
+                                      ) || store.get("prompts")[0],
                                     false
                                   );
 
-                                  if (assistantObj === null) {
-                                    assistantObj = loadAssistant();
+                                  if (store.get("assistantObj") === null) {
+                                    store.set("assistantObj", loadAssistant());
                                   }
 
-                                  let customPrompt = {};
+                                  let customPrompt: CustomPrompt = {
+                                    avatar: "",
+                                    name: "",
+                                    system: "",
+                                    temp: "0",
+                                  };
                                   let isCustomPrompt =
                                     (item.promptId !== undefined &&
-                                      item.promptId in assistantObj) === true;
+                                      item.promptId in
+                                        store.get("assistantObj")) === true;
 
                                   if (isCustomPrompt) {
-                                    customPrompt = assistantObj[item.promptId];
+                                    customPrompt =
+                                      store.get("assistantObj")[item.promptId];
 
                                     // Make sure the custom prompt is the last one selected
                                     const z = JSON.stringify(customPrompt);
@@ -85,8 +103,11 @@ export default function convoButton(container) {
                                       id: "custom",
                                       label: "Custom",
                                     });
-                                    importAndLoadPrompt(z, (_) => {});
+                                    importAndLoadPrompt(z, () => {});
                                   }
+
+
+                                  console.log(item);
 
                                   const pickedPrompt =
                                     item.role === "assistant"
@@ -111,9 +132,9 @@ export default function convoButton(container) {
                                                 "./assets/avatars/builtin/custom.svg",
                                               displayName: "Custom (unknown)",
                                             }
-                                        : prompts.find(
-                                            (p) => p.id === item.type
-                                          )
+                                        : (
+                                            store.get("prompts") as Prompt[]
+                                          ).find((p) => p.id === item.type)
                                       : item.name ?? "User";
 
                                   let m = makeMessage(
@@ -126,14 +147,13 @@ export default function convoButton(container) {
                                   if (item.role === "user") {
                                     updateMessage(m.elm, item.content);
                                   } else {
-                                    m.query(".data .text").innerHTML =
+                                    m.qs(".data .text")?.html(
                                       DOMPurify.sanitize(
                                         parseMarkdown(item.content)
                                         // marked.parse(item.content)
-                                      );
+                                      )
+                                    );
                                   }
-
-                                  // console.log(item, m, i, pickedPrompt);
                                 }
 
                                 makeMsgSeparator();
@@ -153,16 +173,18 @@ export default function convoButton(container) {
             new Html("button")
               .text("Export")
               .classOn("fg-auto")
-              .on("click", (e) => {
+              .on("click", () => {
                 modal.hide();
                 const btn_modalContent = new Html("div")
                   .text("Here's your conversation:")
                   .append(
                     new Html("textarea")
-                      .attr({ rows: 8 })
+                      .attr({ rows: "8" })
                       .html(
                         JSON.stringify(
-                          store.get("messageHistory").filter((m) => m !== null)
+                          store
+                            .get("messageHistory")
+                            .filter((m: any) => m !== null)
                         )
                       )
                   );

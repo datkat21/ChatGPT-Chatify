@@ -1,8 +1,16 @@
-import {
-  saveAssistant,
-  loadAssistant,
-  deleteAssistant,
-} from "./assistant.js";
+declare global {
+  interface Window {
+    prompts: any;
+    mh: any;
+    messages: any;
+    sourceMessage: any;
+    previousMessage: any;
+    finalHtml: any;
+    hljs: any;
+  }
+}
+
+import { saveAssistant, loadAssistant, deleteAssistant } from "./assistant.js";
 import { importAndLoadPrompt } from "./promptHandling.js";
 import settingsListener from "./settingsListener.js";
 import { store } from "./_globals.js";
@@ -33,6 +41,4 @@ store.set("menuState", true);
 
 makeMsgSeparator("Your conversation begins here.");
 
-
 updateState();
-

@@ -1,5 +1,5 @@
 import { store } from "./_globals.js";
-import Html from "../scripts/html.js";
+import Html from "@datkat21/html";
 import Modal from "./modal.js";
 
 export async function getPrompts() {
@@ -7,10 +7,12 @@ export async function getPrompts() {
 
   window.prompts = JSON.parse(JSON.stringify(prompts));
 
+  store.set('prompts', prompts);
+
   return prompts;
 }
 
-export function importAndLoadPrompt(value, cb) {
+export function importAndLoadPrompt(value: string, cb: CallableFunction) {
   try {
     const r = JSON.parse(value);
     if (r.system && r.temp) {

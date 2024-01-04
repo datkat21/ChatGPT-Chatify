@@ -1,7 +1,12 @@
-import Html from "../scripts/html.js";
+import Html from "@datkat21/html";
 
 export default class Modal {
-  constructor(content) {
+  modal;
+  content;
+  closeBtn;
+  overlay;
+  elementsArray;
+  constructor(content: string | HTMLElement | Html) {
     this.modal = new Html("div");
     this.modal.class("modal");
     this.modal.attr({ "aria-modal": "true", role: "dialog" });
@@ -29,7 +34,7 @@ export default class Modal {
     this.overlay.class("modal-overlay");
     this.overlay.appendTo(this.modal);
 
-    this.modal.on("keydown", (e) => {
+    this.modal.on("keydown", (e: any) => {
       this.handleKeyDown(e);
     });
 
@@ -41,7 +46,7 @@ export default class Modal {
       el.setAttribute("tabindex", "0");
     });
 
-    this.elementsArray[0].addEventListener("keydown", (e) => {
+    this.elementsArray[0].addEventListener("keydown", (e: any) => {
       if (e.key === "Tab" && e.shiftKey) {
         e.preventDefault();
         this.elementsArray[this.elementsArray.length - 1].focus();
@@ -49,7 +54,7 @@ export default class Modal {
     });
     this.elementsArray[this.elementsArray.length - 1].addEventListener(
       "keydown",
-      (e) => {
+      (e: any) => {
         if (e.key === "Tab" && !e.shiftKey) {
           e.preventDefault();
           this.elementsArray[0].focus();
@@ -65,11 +70,19 @@ export default class Modal {
     this.elementsArray[0].focus();
   }
 
+  tempHide() {
+    this.modal.style({ display: "none" });
+  }
+
+  tempShow() {
+    this.modal.style({ display: "block" });
+  }
+
   hide() {
     this.modal.cleanup();
   }
 
-  handleKeyDown(e) {
+  handleKeyDown(e: KeyboardEvent) {
     if (e.key === "Escape") {
       this.hide();
     }

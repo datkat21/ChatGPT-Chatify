@@ -21,5 +21,10 @@
     "marked-gfm-heading-id": "^3.0.4",
     "openai": "^4.0.0-beta.0",
     "socket.io": "^4.6.1"
+  },
+  "devDependencies": {
+    "@datkat21/html": "1.1.5",
+    "@types/web": "^0.0.134",
+    "bun-types": "^1.0.21"
   }
 }

@@ -1,7 +1,12 @@
 import { store } from "./_globals.js";
-import { parseMarkdown, scrollDown } from "./util.js";
+import { futureDate, parseMarkdown, scrollDown } from "./util.js";
+import DOMPurify from "../scripts/purify.min.js";
+import { mpGetPromptsSelected } from "./ui/sidebar/multiPrompt.js";
 
-export async function callAiStream(message, callback) {
+export async function callAiStream(
+  message: string,
+  callback: CallableFunction
+) {
   try {
     const userSettings = store.get("userSettings");
     const data = {
@@ -16,7 +21,7 @@ export async function callAiStream(message, callback) {
       rememberContext: store.get("userSettings").rememberContext,
       context: store
         .get("messageHistory")
-        .filter((m) => m !== null)
+        .filter((m: any) => m !== null)
         .slice(0, store.get("messageHistory").length - 1),
       userSettings: {
         timeZone: userSettings.timeZone,
@@ -38,36 +43,38 @@ export async function callAiStream(message, callback) {
       body: JSON.stringify(data),
     };
 
-    let shouldContinue = true;
+    let shouldContinue: number = 1;
     let error = null;
 
-    const response = await fetch("/api/stream", options)
+    const response = (await fetch("/api/stream", options)
       .then(async (r) => {
         if (!r.ok) {
           // Expect an error in the body
           console.log("whoops");
-          shouldContinue = false;
-          let errordata = await r.json();
-          switch (errordata.errorCode) {
+          shouldContinue = 0;
+          let errorData = await r.json();
+          switch (errorData.errorCode) {
             case "too_many_requests":
-              error = `You have used too many requests (${apiUsage.used} of ${
-                apiUsage.total
+              error = `You have used too many requests (${
+                store.get("apiUsage").used
+              } of ${
+                store.get("apiUsage").total
               }) in the past hour. Please try again ${futureDate(
-                new Date(apiUsage.expires)
+                new Date(store.get("apiUsage").expires)
               )} from now.`;
               break;
             default:
-              error = errordata.errorMessage;
+              error = errorData.errorMessage;
               break;
           }
         } else return r;
       })
       .catch((e) => {
-        shouldContinue = false;
+        shouldContinue = 0;
         error = e;
-      });
+      })) as Response;
 
-    if (shouldContinue === false) {
+    if (shouldContinue === 0) {
       console.log("shouldContinue FAILED");
       callback({
         unfilteredMsg: `<div id='AI_TEMP_ERR' class='error'>${error}</div>`,
@@ -76,7 +83,7 @@ export async function callAiStream(message, callback) {
       return;
     }
 
-    const stream = response.body;
+    const stream = response.body as ReadableStream<Uint8Array>;
 
     const reader = stream.getReader();
     let td = new TextDecoder();
@@ -136,7 +143,7 @@ export async function callAiStream(message, callback) {
     //       })
     reader
       .read()
-      .then(async function processResult(result) {
+      .then(async function processResult(result): Promise<any> {
         if (result.done) {
           return;
         }
@@ -144,7 +151,7 @@ export async function callAiStream(message, callback) {
         buffer += r.replace(/data:/g, ""); // add new data to buffer
         const events = buffer.split(`\n`);
 
-        buffer = events.pop();
+        buffer = events.pop()?.toString() as string;
 
         for (const event of events) {
           try {
@@ -199,13 +206,17 @@ export async function callAiStream(message, callback) {
   }
 }
 
-export async function callAiMessage(ai, message) {
-  return new Promise((res, rej) => {
+export async function callAiMessage(ai: HTMLElement, message: string) {
+  return new Promise(async (res, rej) => {
     let result = "";
-    ai.querySelector(".data .text").innerHTML = "";
+    let x = ai.querySelector(".data .text");
+    if (x !== null) {
+      x.innerHTML = "";
+    }
     ai.classList.add("thinking");
-    let messages = [];
-    callAiStream(message, (r) => {
+    let messages: any[] = [];
+    callAiStream(message, (r: any) => {
+      // boolean | { unfilteredMsg: string } | false | { message: string }) => {
       if (r === true) {
         ai.classList.remove("thinking");
         window.messages = messages;
@@ -218,23 +229,22 @@ export async function callAiMessage(ai, message) {
       }
       if (r === false) {
         // temp. clear
-        ai.querySelector(".data .text").innerHTML = "";
+        if (x !== null) x.innerHTML = "";
+        return;
       }
       if (r.unfilteredMsg) {
         result += r.unfilteredMsg;
-        ai.querySelector(".data .text").innerHTML = result;
+        if (x !== null) x.innerHTML = result;
         return;
       }
       if (!r.msg) return console.log("?!");
       result += r.msg;
-      ai.querySelector(".data .text").innerHTML = DOMPurify.sanitize(
-        parseMarkdown(result)
-      );
+      if (x !== null) x.innerHTML = DOMPurify.sanitize(parseMarkdown(result));
       scrollDown();
 
       window.sourceMessage = result;
       window.previousMessage = r;
-      window.finalHtml = ai.querySelector(".data .text").innerHTML;
+      window.finalHtml = x !== null ? x.innerHTML : null;
     });
   });
 }

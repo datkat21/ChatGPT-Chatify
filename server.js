@@ -20,6 +20,7 @@ import {
   encodedLengths,
   generateResponse,
   getIp,
+  getPersonalities,
   getSocketioIp,
   log,
 } from "./api.js";
@@ -64,6 +65,38 @@ function rateLimit(req) {
   }
 }
 
+function rateLimitGP(req) {
+  let ip = req;
+  if (typeof req !== "string") ip = getIp(req);
+
+  // Get the number of requests made by this IP address in the last hour
+  const numRequests = requestsMapGP.get(ip) || 0;
+
+  let plan = { limit: MAX_REQS, label: "free" };
+  if (PlansLookup.has(ip)) plan = PlansLookup.get(ip);
+
+  // If the number of requests is greater than the maximum allowed, return an error
+  if (numRequests >= plan.limit) {
+    return true;
+  }
+
+  // Increment the number of requests made by this IP address and store it in the Map
+  requestsMapGP.set(ip, numRequests + 1);
+
+  if (numRequests === 0) {
+    // Set the expiry time for this IP address's entry in the Map to 1 hour from now
+    const expiryTime = 60 * 60 * 1000;
+    const expiryTimeDate = Date.now() + expiryTime;
+    requestsMapGP.set(ip + "e", expiryTimeDate);
+
+    setTimeout(() => {
+      requestsMapGP.delete(ip);
+    }, expiryTime);
+
+    return false;
+  }
+}
+
 const app = express();
 const server = createServer(app);
 const io = new Server(server);
@@ -71,6 +104,7 @@ const io = new Server(server);
 // Some server configuration
 const MAX_REQS = Config.default.options.defaultRateLimit;
 const requestsMap = new Map();
+const requestsMapGP = new Map();
 const prompts = Config.default.prompts.init();
 const PlansLookup = new Map();
 try {
@@ -159,6 +193,37 @@ app.get("/api/usage", (req, res) => {
     expires: new Date(requestsMap.get(ip + "e")).toJSON(),
     plan: plan.label,
   });
+});
+
+app.post("/api/getPersonality", express.json(), async (req, res) => {
+  if (rateLimitGP(getIp(req)) === true) {
+    return res.status(429).json({
+      error: true,
+      errorMessage: "Too Many Requests",
+      errorCode: "too_many_requests",
+    });
+  }
+
+  const prompt = req.body.prompt;
+  const characters = req.body.characters;
+  const prevTalkingTo = req.body.prevTalkingTo;
+
+  console.log(prompt, characters, prevTalkingTo);
+
+  if (!Array.isArray(characters) || typeof prompt !== "string")
+    return res.status(400).send("Bad request.");
+
+  console.log("Getting personality...");
+
+  const personality = await getPersonalities(
+    prompt.substring(0, 1024), // to save on possible token waste
+    characters,
+    prevTalkingTo
+  );
+
+  console.log(personality);
+
+  res.status(200).json(personality);
 });
 
 const ver = "v0.7.0";

@@ -1,11 +1,16 @@
-import Html from "../../scripts/html.js";
+import Html from "@datkat21/html";
 import { store } from "../_globals.js";
 import { checkRequests, updateRequestsMessage } from "../apiUsage.js";
 import { callAiMessage } from "../callApi.js";
 import Modal from "../modal.js";
-import { parseMarkdown, scrollDown } from "../util.js";
+import { Prompt, parseMarkdown, scrollDown } from "../util.js";
 import { autoExpandTextArea } from "./messages.js";
-import { ICONS } from "./sidebar/icons.js";
+import { ICONS } from "./icons.js";
+import DOMPurify from "../../scripts/purify.min.js";
+import { mpGetPromptsSelected } from "./sidebar/multiPrompt.js";
+import { CustomPrompt, loadAssistant } from "../assistant.js";
+import { setPrompt } from "./sidebar/promptPick.js";
+import { importAndLoadPrompt } from "../promptHandling.js";
 
 let isTyping = false; // This will be true at any point message generation begins
 let currentSocket = null;
@@ -15,30 +20,30 @@ store.set("currentSocket", currentSocket);
 
 export function makeMessage(
   side = 0,
-  data,
-  messageIndex,
-  prompt = null,
+  data: string,
+  messageIndex: number,
+  prompt: Prompt | string | null = null,
   isSystem = false,
   actuallyGoesToMessageHistory = true
 ) {
   if (messageIndex === undefined)
     messageIndex = store.get("messageHistory").length;
-  const msg = new Html().class("message");
-  const messageContentWrapper = new Html().class("wrapper").appendTo(msg);
-  const icon = new Html().class("icon").appendTo(messageContentWrapper);
-  const dataContainer = new Html()
+  const msg = new Html("div").class("message");
+  const messageContentWrapper = new Html("div").class("wrapper").appendTo(msg);
+  const icon = new Html("div").class("icon").appendTo(messageContentWrapper);
+  const dataContainer = new Html("div")
     .class("data", "fg-max")
     .appendTo(messageContentWrapper);
-  const extra = new Html().class("column").appendTo(msg);
-  const uname = new Html().class("name").appendTo(dataContainer);
-  const text = new Html().class("text").appendTo(dataContainer);
+  const extra = new Html("div").class("column").appendTo(msg);
+  const uname = new Html("div").class("name").appendTo(dataContainer);
+  const text = new Html("div").class("text").appendTo(dataContainer);
   switch (side) {
     case 0:
       msg.class("user");
       dataContainer.class("muted");
       text.html(data);
       if (prompt) {
-        uname.text(prompt);
+        uname.text(String(prompt));
       } else {
         uname.text(store.get("userName"));
       }
@@ -52,6 +57,8 @@ export function makeMessage(
           'select option[value="' + select.elm.value + '"]'
         ).value
       );
+      // Only Prompt type should be given for assistant.
+      prompt = prompt as Prompt;
       if (prompt !== null) {
         if (prompt.avatar !== null && prompt.avatar !== undefined) {
           msg.style({ "--icon": "url(" + prompt.avatar + ")" });
@@ -63,11 +70,13 @@ export function makeMessage(
         }
       }
       if (select.elm.value === "custom") {
-        if (store.get('aiAvatarOverride') !== false) {
-          icon.style({ "background-image": "url(" + store.get('aiAvatarOverride') + ")" });
+        if (store.get("aiAvatarOverride") !== false) {
+          icon.style({
+            "background-image": "url(" + store.get("aiAvatarOverride") + ")",
+          });
         }
-        if (store.get('aiNameOverride') !== false) {
-          uname.text(store.get('aiNameOverride'));
+        if (store.get("aiNameOverride") !== false) {
+          uname.text(store.get("aiNameOverride"));
         }
       }
       if (isSystem === true)
@@ -79,18 +88,18 @@ export function makeMessage(
       new Html("button")
         .class("transparent", "fg-auto", "small")
         .html(ICONS.trashCan)
-        .on("click", (e) => {
-          let modal;
-          const modalContainer = new Html()
+        .on("click", () => {
+          let modal: Modal;
+          const modalContainer = new Html("div")
             .text("Are you sure you want to delete this message?")
             .append(
-              new Html()
+              new Html("div")
                 .classOn("fg-auto", "row")
                 .append(
                   new Html("button")
                     .text("OK")
                     .classOn("fg-auto")
-                    .on("click", (e) => {
+                    .on("click", () => {
                       store.get("messageHistory")[messageIndex] = null;
                       window.mh = store.get("messageHistory");
                       msg.cleanup();
@@ -101,7 +110,7 @@ export function makeMessage(
                   new Html("button")
                     .text("Cancel")
                     .classOn("danger", "fg-auto")
-                    .on("click", (e) => {
+                    .on("click", () => {
                       modal.hide();
                     })
                 )
@@ -113,7 +122,7 @@ export function makeMessage(
       new Html("button")
         .class("transparent", "fg-auto", "small")
         .html(ICONS.copy)
-        .on("click", (e) => {
+        .on("click", () => {
           let text = store.get("messageHistory")[messageIndex].content;
           if (navigator.clipboard) {
             navigator.clipboard.writeText(text);
@@ -129,27 +138,27 @@ export function makeMessage(
       new Html("button")
         .class("transparent", "fg-auto", "small")
         .html(ICONS.edit)
-        .on("click", (e) => {
+        .on("click", () => {
           let text = store.get("messageHistory")[messageIndex].content;
 
           const textArea = new Html("textarea")
             .classOn("mt-1")
-            .attr({ rows: 8, placeholder: "Message content is empty" })
+            .attr({ rows: "8", placeholder: "Message content is empty" })
             .val(text);
 
-          let modal;
+          let modal: Modal;
 
-          const modalContainer = new Html()
+          const modalContainer = new Html("div")
             .text(`Edit Message #${messageIndex}`)
             .appendMany(
               textArea,
-              new Html()
+              new Html("div")
                 .classOn("fg-auto", "row")
                 .append(
                   new Html("button")
                     .text("OK")
                     .classOn("fg-auto")
-                    .on("click", (e) => {
+                    .on("click", () => {
                       let editedValue = textArea.getValue();
                       updateMessage(msg.elm, editedValue);
                       store.get("messageHistory")[messageIndex].content =
@@ -161,7 +170,7 @@ export function makeMessage(
                   new Html("button")
                     .text("Cancel")
                     .classOn("danger", "fg-auto")
-                    .on("click", (e) => {
+                    .on("click", () => {
                       modal.hide();
                     })
                 )
@@ -175,18 +184,18 @@ export function makeMessage(
       new Html("button")
         .class("transparent")
         .html(ICONS.trashCan)
-        .on("click", (e) => {
-          let modal;
-          const modalContainer = new Html()
+        .on("click", () => {
+          let modal: Modal;
+          const modalContainer = new Html("div")
             .text("Are you sure you want to delete this message?")
             .append(
-              new Html()
+              new Html("div")
                 .classOn("fg-auto", "row")
                 .append(
                   new Html("button")
                     .text("OK")
                     .classOn("fg-auto")
-                    .on("click", (e) => {
+                    .on("click", () => {
                       msg.cleanup();
                       modal.hide();
                     })
@@ -195,7 +204,7 @@ export function makeMessage(
                   new Html("button")
                     .text("Cancel")
                     .classOn("danger", "fg-auto")
-                    .on("click", (e) => {
+                    .on("click", () => {
                       modal.hide();
                     })
                 )
@@ -211,82 +220,194 @@ export function makeMessage(
   return msg;
 }
 
-export function updateMessage(messageRef, data = null) {
-  messageRef.querySelector(".data").classList.remove("muted", "dots-flow");
+export function updateMessage(
+  messageRef: HTMLElement,
+  data: string | null = null
+) {
+  let x = messageRef.querySelector(".data");
+  let y = messageRef.querySelector(".data .text");
 
+  if (x !== null) x.classList.remove("muted", "dots-flow");
   if (data !== null) {
     if (data.startsWith('"')) data = data.slice(1);
     if (data.endsWith('"')) data = data.slice(0, -1);
-    messageRef.querySelector(".data .text").innerHTML = DOMPurify.sanitize(
-      parseMarkdown(data)
-    );
+    if (y !== null) y.innerHTML = DOMPurify.sanitize(parseMarkdown(data));
   }
 }
 
-async function request(text, addUserMessage = true) {
-  // message = text;
+export async function request(text: string, addUserMessage = true) {
+  if (store.get("mpState") === true) {
+    // call GetPersonality if mp is enabled.
+    if (mpGetPromptsSelected().length === 0) {
+      alert(
+        "You don't have any prompts in your multi-prompt.\nConfigure multi-prompt options in the Prompt Selection modal."
+      );
 
-  const userIndex =
-    store.get("messageHistory").push({
-      role: "user",
-      content: text,
-      name: store.get("userSettings").username,
-    }) - 1;
+      store.get("inputArea").elm.value = text;
 
-  const aiIndex =
-    store.get("messageHistory").push({
-      role: "assistant",
-      type: store.get("select").elm.value,
-      content: "Thinking...",
-    }) - 1;
+      return;
+    }
 
-  if (store.get("select").elm.value === "custom") {
-    // Custom prompts handle differently than normal ones, so we save custom data
-    if (!store.get('loadedCustomPrompt').id) {
-      // Something is wrong as we have a custom prompt set but it hasn't filled the custom prompt data
-      // return alert(
-      //   "Unable to load your request because the custom prompt is not properly set."
-      // );
-    } else
-      store.get("messageHistory")[aiIndex].promptId = store.get('loadedCustomPrompt').id;
+    let message = `${store.get("userName")}: ${String(text)}`;
+
+    let finalResponse: string[] | false = false;
+
+    const personalities = await fetch("/api/getPersonality", {
+      method: "post",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        prompt: text.substring(0, 1024),
+        characters: mpGetPromptsSelected().map((p) => p.displayName),
+        prevTalkingTo: null,
+      }),
+    });
+
+    finalResponse = await personalities.json();
+
+    console.log("Personalities:", finalResponse);
+
+    if (finalResponse === false) {
+      return alert("Multi-prompt error: Couldn't detect a prompt to use.");
+    }
+
+    // This part only goes once
+    const userIndex =
+      store.get("messageHistory").push({
+        role: "user",
+        content: text,
+        name: store.get("userSettings").username,
+      }) - 1;
+
+    let human: Html = new Html("div");
+    if (addUserMessage === true) {
+      human = makeMessage(
+        0,
+        DOMPurify.sanitize(parseMarkdown(text)),
+        userIndex
+      );
+    }
+    updateMessage(human.elm);
+
+    // This part loops
+    for (let i = 0; i < finalResponse.length; i++) {
+      const currentPrompt = finalResponse[i];
+
+      const aiIndex =
+        store.get("messageHistory").push({
+          role: "assistant",
+          type: store.get("select").elm.value,
+          content: "Thinking...",
+        }) - 1;
+
+      const prompt = (store.get("prompts") as Prompt[]).find(
+        (p) => p.displayName === currentPrompt
+      );
+
+      if (prompt === undefined) {
+        // search in custom prompts instead
+        const assistants = loadAssistant() as Record<string, CustomPrompt>;
+
+        const customPromptId = await new Promise((resolve, reject) => {
+          Object.keys(assistants).forEach((a) => {
+            if (assistants[a].name === currentPrompt) {
+              resolve(a);
+            }
+          });
+        });
+
+        // set the custom prompt
+        setPrompt({ id: "custom", label: "Custom" }, false);
+        store.set("loadedCustomPrompt", assistants[customPromptId as string]);
+        store.get("loadedCustomPrompt").id = customPromptId;
+
+        const z = JSON.stringify(store.get("loadedCustomPrompt"));
+
+        importAndLoadPrompt(z, () => {});
+      } else {
+        setPrompt(prompt, false);
+      }
+
+      let ai = makeMessage(1, "", aiIndex, prompt);
+
+      isTyping = true;
+      updateState();
+
+      store.get("deleteConvoButton").elm.disabled = true; // Required otherwise bad things happen
+
+      let result = await callAiMessage(ai.elm, text);
+
+      store.get("messageHistory")[aiIndex].content = result;
+
+      isTyping = false;
+      updateState();
+
+      store.get("deleteConvoButton").elm.disabled = false;
+    }
+  } else {
+    // Default mode
+    const userIndex =
+      store.get("messageHistory").push({
+        role: "user",
+        content: text,
+        name: store.get("userSettings").username,
+      }) - 1;
+
+    const aiIndex =
+      store.get("messageHistory").push({
+        role: "assistant",
+        type: store.get("select").elm.value,
+        content: "Thinking...",
+      }) - 1;
+
+    if (store.get("select").elm.value === "custom") {
+      // Custom prompts handle differently than normal ones, so we save custom data
+      if (!store.get("loadedCustomPrompt").id) {
+        // Something is wrong as we have a custom prompt set but it hasn't filled the custom prompt data
+        // return alert(
+        //   "Unable to load your request because the custom prompt is not properly set."
+        // );
+      } else
+        store.get("messageHistory")[aiIndex].promptId =
+          store.get("loadedCustomPrompt").id;
+    }
+
+    const prompt =
+      (store.get("prompts") as Prompt[]).find(
+        (p) => p.id === store.get("select").elm.value
+      ) || (store.get("prompts") as Prompt[])[0];
+
+    let human: Html = new Html("div");
+    if (addUserMessage === true) {
+      human = makeMessage(
+        0,
+        DOMPurify.sanitize(parseMarkdown(text)),
+        userIndex
+      );
+    }
+
+    let ai = makeMessage(1, "", aiIndex, prompt);
+
+    isTyping = true;
+    updateState();
+
+    store.get("deleteConvoButton").elm.disabled = true; // Required otherwise bad things happen
+
+    let result = await callAiMessage(ai.elm, text);
+
+    updateMessage(human.elm);
+    store.get("messageHistory")[aiIndex].content = result;
+
+    isTyping = false;
+    updateState();
+
+    store.get("deleteConvoButton").elm.disabled = false;
   }
-
-  const prompt =
-    prompts.find((p) => p.id === store.get("select").elm.value) || prompts[0];
-
-  // console.log(messageHistory[aiIndex], prompt);
-
-  let human;
-  if (addUserMessage === true) {
-    human = makeMessage(0, DOMPurify.sanitize(parseMarkdown(text)), userIndex);
-  }
-  let ai = makeMessage(1, "", aiIndex, prompt);
-
-  isTyping = true;
-  updateState();
-
-  // console.log(currentSocket);
-
-  store.get("deleteConvoButton").elm.disabled = true; // Required otherwise bad things happen
-
-  let result = await callAiMessage(
-    ai.elm,
-    text,
-    store.get("messageHistory").slice(0, store.get("messageHistory").length - 1)
-  );
-  updateMessage(human.elm);
-  store.get("messageHistory")[aiIndex].content = result;
-
-  isTyping = false;
-  updateState();
-  store.get("deleteConvoButton").elm.disabled = false;
 
   await checkRequests();
   updateRequestsMessage();
 }
 
-const b4UnloadHandler = (event) => {
-  (event || window.event).returnValue = null;
+const b4UnloadHandler = () => {
   return null;
 };
 

@@ -1,16 +1,16 @@
-import Html from "../../../scripts/html.js";
+import Html from "@datkat21/html";
 import { store } from "../../_globals.js";
-import { loadAssistant, saveAssistant } from "../../assistant";
+import { CustomPrompt, loadAssistant, saveAssistant } from "../../assistant.js";
 import Modal from "../../modal.js";
 import { importAndLoadPrompt } from "../../promptHandling.js";
 import { toSnakeCase } from "../../util.js";
 
-export default function customSettings(sideBar) {
+export default function customSettings(sideBar: Html) {
   store.set("aiNameOverride", false);
   store.set("aiAvatarOverride", false);
 
-  const customSettingsWrapper = new Html()
-    .class("column", "pb-2", "pt-0", "hidden")
+  const customSettingsWrapper = new Html("div")
+    .class("column", "bordered-box", "pt-0", "hidden")
     .appendTo(sideBar);
 
   store.set("customSettingsWrapper", customSettingsWrapper);
@@ -23,8 +23,10 @@ export default function customSettings(sideBar) {
   const customSettings_overrideName = new Html("input")
     .appendTo(customSettingsWrapper)
     .attr({ type: "text", placeholder: "Bot Name Override" })
-    .on("input", (e) => {
-      store.set("aiNameOverride", e.target.value);
+    .on("input", (e: Event) => {
+      if (e.target != null) {
+        store.set("aiNameOverride", (e.target as HTMLInputElement).value);
+      }
       if (store.get("aiNameOverride") == "") {
         store.set("aiNameOverride", false);
       }
@@ -35,8 +37,10 @@ export default function customSettings(sideBar) {
       type: "text",
       placeholder: "Avatar Override, ex. https://...png",
     })
-    .on("input", (e) => {
-      store.set("aiAvatarOverride", e.target.value);
+    .on("input", (e: Event) => {
+      if (e.target != null) {
+        store.set("aiAvatarOverride", (e.target as HTMLInputElement).value);
+      }
       if (store.get("aiAvatarOverride") == "") {
         store.set("aiAvatarOverride", false);
       }
@@ -60,16 +64,19 @@ export default function customSettings(sideBar) {
     .appendTo(customSettings_buttonsWrapper)
     .on("click", () => {
       // Take the config from the prompt and import it ..
-      const ta = new Html("textarea").attr({ rows: 8, placeholder: "{ ... }" });
+      const ta = new Html("textarea").attr({
+        rows: "8",
+        placeholder: "{ ... }",
+      });
 
       const modalContent = new Html("div").text("Import JSON data:").append(
-        new Html().classOn("column").appendMany(
+        new Html("div").classOn("column").appendMany(
           ta,
           new Html("button")
             .text("Attempt Import")
             .classOn("fg-auto")
-            .on("click", (e) => {
-              importAndLoadPrompt(ta.elm.value, () => {
+            .on("click", () => {
+              importAndLoadPrompt(ta.getValue(), () => {
                 modal.hide();
               });
             })
@@ -88,19 +95,19 @@ export default function customSettings(sideBar) {
       const modalContent = new Html("div")
         .text("How do you want to export?")
         .append(
-          new Html().classOn("row").appendMany(
+          new Html("div").classOn("row").appendMany(
             new Html("button")
               .text("JSON Export")
               .classOn("fg-auto")
-              .on("click", (e) => {
+              .on("click", () => {
                 modal.hide();
                 const btn_modalContent = new Html("div")
                   .text("Here's your exported prompt:")
                   .append(
-                    new Html("textarea").attr({ rows: 8 }).html(
+                    new Html("textarea").attr({ rows: "8" }).html(
                       JSON.stringify({
-                        system: customSettings_systemPrompt.elm.value,
-                        temp: customSettings_temp.elm.value,
+                        system: customSettings_systemPrompt.getValue(),
+                        temp: customSettings_temp.getValue(),
                         avatar: store.get("aiAvatarOverride"),
                         name: store.get("aiNameOverride"),
                       })
@@ -112,26 +119,29 @@ export default function customSettings(sideBar) {
             new Html("button")
               .text("Add to Saved")
               .classOn("fg-auto")
-              .on("click", (e) => {
+              .on("click", () => {
                 modal.hide();
 
-                const z = loadAssistant();
+                const assistants = loadAssistant() as Record<
+                  string,
+                  CustomPrompt
+                >;
 
                 const x =
                   store.get("aiNameOverride") ||
-                  "prompt-" + Object.keys(z).length;
+                  "prompt-" + Object.keys(assistants).length;
 
-                const y = toSnakeCase(x);
+                const snakeCasedName = toSnakeCase(x);
 
-                if (z[y]) {
+                if (assistants[snakeCasedName]) {
                   if (
                     confirm(
-                      `Saving this prompt with the same name as "${y}" will forcefully overwrite it.\nAre you sure you want to do this?`
+                      `Saving this prompt with the same name as "${snakeCasedName}" will forcefully overwrite it.\nAre you sure you want to do this?`
                     ) === true
                   ) {
-                    saveAssistant(y, {
-                      system: customSettings_systemPrompt.elm.value,
-                      temp: customSettings_temp.elm.value,
+                    saveAssistant(snakeCasedName, {
+                      system: customSettings_systemPrompt.getValue(),
+                      temp: customSettings_temp.getValue(),
                       avatar: store.get("aiAvatarOverride"),
                       name: x,
                     });
@@ -139,9 +149,9 @@ export default function customSettings(sideBar) {
                     return;
                   }
                 } else {
-                  saveAssistant(y, {
-                    system: customSettings_systemPrompt.elm.value,
-                    temp: customSettings_temp.elm.value,
+                  saveAssistant(snakeCasedName, {
+                    system: customSettings_systemPrompt.getValue(),
+                    temp: customSettings_temp.getValue(),
                     avatar: store.get("aiAvatarOverride"),
                     name: store.get("aiNameOverride"),
                   });

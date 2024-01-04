@@ -1,13 +1,19 @@
-import Html from "../../../scripts/html.js";
+import Html from "@datkat21/html";
 import { store } from "../../_globals.js";
-import { deleteAssistant, loadAssistant } from "../../assistant.js";
+import {
+  CustomPrompt,
+  deleteAssistant,
+  loadAssistant,
+} from "../../assistant.js";
 import Modal from "../../modal.js";
 import { makeMessage, updateMessage } from "../state.js";
 import Fuse from "../../../scripts/fuse.esm.js";
 import { importAndLoadPrompt } from "../../promptHandling.js";
+import { Prompt, PromptPickType, PromptType } from "../../util.js";
+import { multiPromptUi } from "./multiPrompt.js";
 
 let selectedPrompt = {};
-export function setPrompt(prp, mkMsg = true) {
+export function setPrompt(prp: Prompt, mkMsg = true) {
   const select = store.get("select");
   select.elm.value = prp.id;
   store.get("selectPromptBtn").text(prp.label);
@@ -53,12 +59,16 @@ export function setPrompt(prp, mkMsg = true) {
   return selectedPrompt;
 }
 
-export function promptPick(focusTab = "builtIn") {
+export function promptPick(
+  focusTab: "builtIn" | "community" | "saved" = "builtIn",
+  type = PromptPickType.Default,
+  mkMsg: boolean = true
+) {
   return new Promise((resolve, reject) => {
-    const tabsButtons = new Html().classOn("row").classOn("fg");
-    const tabsGroup = new Html().classOn("fg-max");
+    const tabsButtons = new Html("div").classOn("row").classOn("fg");
+    const tabsGroup = new Html("div").classOn("fg-max");
 
-    function tabTransition(btn, tab) {
+    function tabTransition(btn: Html, tab: Html) {
       promptsTab_builtInTab.classOn("extra-hidden");
       promptsTab_communityTab.classOn("extra-hidden");
       promptsTab_savedTab.classOn("extra-hidden");
@@ -69,41 +79,49 @@ export function promptPick(focusTab = "builtIn") {
       tab.classOff("extra-hidden");
     }
 
-    function setTabContent(tab, prompts, savedPromptsShowDeleteButton) {
-      function makePrompt(prp) {
-        return new Html().classOn("prompt").appendMany(
-          new Html().classOn("assistant").appendMany(
-            new Html()
+    function setTabContent(
+      tab: Html,
+      prompts: Prompt[],
+      savedPromptsShowDeleteButton: boolean = false
+    ) {
+      function makePrompt(prp: Prompt) {
+        return new Html("div").classOn("prompt").appendMany(
+          new Html("div").classOn("assistant").appendMany(
+            new Html("div")
               .classOn("who")
               .attr({
-                "data-mode": prp.id,
+                "data-mode": String(prp.id),
                 style:
                   prp.avatar !== null && prp.avatar !== undefined
                     ? `--icon:url(${prp.avatar})`
                     : "--icon:url(./assets/avatars/builtin/custom.svg)",
               })
               .appendMany(
-                new Html().classOn("icon"),
-                new Html()
+                new Html("div").classOn("icon"),
+                new Html("div")
                   .classOn("name")
-                  .attr({ title: prp.id })
-                  .text(prp.label)
+                  .attr({ title: String(prp.id) })
+                  .text(String(prp.label))
               ),
-            new Html().classOn("greeting").text(prp.greeting),
-            new Html().classOn("hint").text(prp.hint)
+            new Html("div").classOn("greeting").text(String(prp.greeting)),
+            new Html("div").classOn("hint").text(String(prp.hint))
           ),
-          new Html().classOn("controls").appendMany(
-            new Html("button").text("Select").on("click", (e) => {
-              if (prp.type !== "saved") {
-                setPrompt(prp);
+          new Html("div").classOn("controls").appendMany(
+            new Html("button").text("Select").on("click", () => {
+              if (prp.type !== undefined && prp.type !== PromptType.Saved) {
+                setPrompt(prp, mkMsg);
+                store.set('currentPrompt', prp);
                 modal.hide();
                 resolve(prp);
               } else {
                 // New custom prompt handling
-                setPrompt({ id: "custom", label: "Custom" });
-                store.set('loadedCustomPrompt', assistantObj[prp.id]);
-                store.get('loadedCustomPrompt').id = prp.id;
-                const z = JSON.stringify(store.get('loadedCustomPrompt'));
+                setPrompt({ id: "custom", label: "Custom" }, mkMsg);
+                store.set(
+                  "loadedCustomPrompt",
+                  assistantObj[prp.id?.toString() as string]
+                );
+                store.get("loadedCustomPrompt").id = prp.id;
+                const z = JSON.stringify(store.get("loadedCustomPrompt"));
 
                 importAndLoadPrompt(z, () => {
                   modal.hide();
@@ -115,24 +133,24 @@ export function promptPick(focusTab = "builtIn") {
               ? new Html("button")
                   .text("Delete")
                   .classOn("danger")
-                  .on("click", (e) => {
-                    if (prp.type !== "saved") {
-                      setPrompt(prp);
+                  .on("click", () => {
+                    if (prp.type !== PromptType.Saved) {
+                      setPrompt(prp, mkMsg);
                       modal.hide();
                     } else {
-                      let mdl;
-                      const modalContainer = new Html().appendMany(
+                      let mdl: Modal;
+                      const modalContainer = new Html("div").appendMany(
                         new Html("p")
                           .class("mt-0")
                           .text("Are you sure you want to delete this prompt?"),
 
-                        new Html().classOn("prompt-box").append(
-                          new Html().classOn("prompt").append(
-                            new Html().classOn("assistant").appendMany(
-                              new Html()
+                        new Html("div").classOn("prompt-box").append(
+                          new Html("div").classOn("prompt").append(
+                            new Html("div").classOn("assistant").appendMany(
+                              new Html("div")
                                 .classOn("who")
                                 .attr({
-                                  "data-mode": prp.id,
+                                  "data-mode": String(prp.id),
                                   style:
                                     prp.avatar !== null &&
                                     prp.avatar !== undefined
@@ -140,26 +158,30 @@ export function promptPick(focusTab = "builtIn") {
                                       : "--icon:url(./assets/avatars/builtin/custom.svg)",
                                 })
                                 .appendMany(
-                                  new Html().classOn("icon"),
-                                  new Html()
+                                  new Html("div").classOn("icon"),
+                                  new Html("div")
                                     .classOn("name")
-                                    .attr({ title: prp.id })
-                                    .text(prp.label)
+                                    .attr({ title: String(prp.id) })
+                                    .text(String(prp.label))
                                 ),
-                              new Html().classOn("greeting").text(prp.greeting),
-                              new Html().classOn("hint").text(prp.hint)
+                              new Html("div")
+                                .classOn("greeting")
+                                .text(String(prp.greeting)),
+                              new Html("div")
+                                .classOn("hint")
+                                .text(String(prp.hint))
                             )
                           )
                         ),
 
-                        new Html()
+                        new Html("div")
                           .classOn("fg-auto", "row", "pb-0")
                           .append(
                             new Html("button")
                               .text("OK")
                               .classOn("fg-auto")
-                              .on("click", (e) => {
-                                deleteAssistant(prp.id);
+                              .on("click", () => {
+                                deleteAssistant(prp.id as string);
                                 mdl.hide();
                                 modal.hide();
                                 return promptPick("saved");
@@ -169,7 +191,7 @@ export function promptPick(focusTab = "builtIn") {
                             new Html("button")
                               .text("Cancel")
                               .classOn("danger", "fg-auto")
-                              .on("click", (e) => {
+                              .on("click", () => {
                                 mdl.hide();
                               })
                           )
@@ -184,13 +206,17 @@ export function promptPick(focusTab = "builtIn") {
         );
       }
 
-      const container = new Html().classOn("prompt-box").appendTo(tab);
-      const controlsBox = new Html().classOn("prompt-box").appendTo(container);
-      const promptBox = new Html().classOn("prompt-box").appendTo(container);
+      const container = new Html("div").classOn("prompt-box").appendTo(tab);
+      const controlsBox = new Html("div")
+        .classOn("prompt-box")
+        .appendTo(container);
+      const promptBox = new Html("div")
+        .classOn("prompt-box")
+        .appendTo(container);
 
       const searchBar = new Html("input")
         .attr({ type: "text", placeholder: "Search..." })
-        .on("input", (e) => {
+        .on("input", (e: Event) => {
           // Setup fuse.js
           const options = {
             keys: ["name", "system", "greeting", "displayName", "hint"], // Properties to search in
@@ -199,7 +225,7 @@ export function promptPick(focusTab = "builtIn") {
 
           const fuse = new Fuse(prompts, options);
 
-          const term = e.target.value;
+          const term = (e.target as HTMLInputElement).value;
 
           if (term === "") {
             promptBox.html("");
@@ -210,7 +236,9 @@ export function promptPick(focusTab = "builtIn") {
             return;
           }
 
-          const searchResults = fuse.search(term);
+          const searchResults = fuse.search(term) as {
+            refIndex: number;
+          }[];
 
           promptBox.html("");
 
@@ -231,20 +259,32 @@ export function promptPick(focusTab = "builtIn") {
           new Html("button")
             .text("Create your own prompt")
             .classOn("fg-auto")
-            .on("click", (e) => {
-              setPrompt({ id: "custom", label: "Custom" });
+            .on("click", () => {
+              setPrompt({ id: "custom", label: "Custom" }, mkMsg);
               modal.hide();
               resolve("custom");
             }),
           new Html("button")
             .text("Scroll to bottom")
             .classOn("transparent", "fg-auto")
-            .on("click", (e) => {
+            .on("click", () => {
               modal.modal.elm.scrollTo({
                 top: modal.modal.elm.scrollHeight,
                 behavior: "smooth",
               });
-            })
+            }),
+          type === PromptPickType.Default
+            ? new Html("button")
+                .text(
+                  `Multi-prompt ${store.get("mpState") === true ? "(On)" : "(Off)"}`
+                )
+                .append(new Html("span").class("badge").text("BETA"))
+                .classOn("transparent", "fg-auto")
+                .on("click", () => {
+                  modal.hide();
+                  multiPromptUi();
+                })
+            : undefined
         ),
         searchBar
       );
@@ -259,26 +299,27 @@ export function promptPick(focusTab = "builtIn") {
       .classOn("tab-selector")
       .classOn("fg")
       .text("Built-In")
-      .on("click", (e) => {
+      .on("click", () => {
         tabTransition(promptsTab_builtInButton, promptsTab_builtInTab);
       })
       .appendTo(tabsButtons);
 
     const promptsTab_builtInTab = new Html("div")
       .classOn("tab")
-      .appendTo(tabsGroup)
-      .append();
+      .appendTo(tabsGroup);
 
     setTabContent(
       promptsTab_builtInTab,
-      prompts.filter((p) => p.type === "builtIn")
+      (store.get("prompts") as Prompt[]).filter(
+        (p) => p.type === PromptType.BuiltIn
+      )
     );
 
     const promptsTab_communityButton = new Html("button")
       .classOn("tab-selector")
       .classOn("fg")
       .text("Community")
-      .on("click", (e) => {
+      .on("click", () => {
         tabTransition(promptsTab_communityButton, promptsTab_communityTab);
       })
       .appendTo(tabsButtons);
@@ -289,14 +330,16 @@ export function promptPick(focusTab = "builtIn") {
 
     setTabContent(
       promptsTab_communityTab,
-      prompts
-        .filter((p) => p.type === "community")
+      (store.get("prompts") as Prompt[])
+        .filter((p) => p.type === PromptType.Community)
         .sort((a, b) => {
-          if (a.hint > b.hint) {
-            return -1;
-          }
-          if (a.hint < b.hint) {
-            return 1;
+          if (a.hint !== undefined && b.hint !== undefined) {
+            if (a.hint > b.hint) {
+              return -1;
+            }
+            if (a.hint < b.hint) {
+              return 1;
+            }
           }
           return 0;
         })
@@ -306,7 +349,7 @@ export function promptPick(focusTab = "builtIn") {
       .classOn("tab-selector")
       .classOn("fg")
       .text("Saved")
-      .on("click", (e) => {
+      .on("click", () => {
         tabTransition(promptsTab_savedButton, promptsTab_savedTab);
       })
       .appendTo(tabsButtons);
@@ -314,7 +357,7 @@ export function promptPick(focusTab = "builtIn") {
     const promptsTab_savedTab = new Html("div")
       .classOn("tab")
       .appendTo(tabsGroup);
-    const assistantObj = loadAssistant();
+    const assistantObj = loadAssistant() as Record<string, CustomPrompt>;
 
     store.set("assistantObj", assistantObj);
 
@@ -323,13 +366,13 @@ export function promptPick(focusTab = "builtIn") {
     let assistantHtml = assistantKeys.map((key) => {
       const p = assistantObj[key];
       return {
-        avatar: p.avatar !== false ? p.avatar : null,
-        displayName: p.name !== false ? p.name : null,
+        avatar: p.avatar !== false ? p.avatar : undefined,
+        displayName: p.name !== false ? p.name : undefined,
         greeting: p.system,
         hint: "This is one of your custom prompts.",
         id: key,
-        label: p.name !== false ? p.name : null,
-        type: "saved",
+        label: p.name !== false ? p.name : "null",
+        type: PromptType.Saved,
       };
     });
 
@@ -371,10 +414,8 @@ export function promptPick(focusTab = "builtIn") {
     const modal = new Modal(modalContent);
     modal.show();
 
-    modal.modal.elm
-      .querySelector(".close-btn")
-      .addEventListener("click", (_) => {
-        resolve(false); // User closed the dialog
-      });
+    modal.modal.qs(".close-btn")?.on("click", () => {
+      resolve(false); // User closed the dialog
+    });
   });
 }

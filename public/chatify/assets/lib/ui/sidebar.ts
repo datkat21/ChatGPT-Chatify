@@ -2,32 +2,35 @@ import { getPrompts } from "../promptHandling.js";
 import convoButton from "./sidebar/conversation.js";
 import { promptPick } from "./sidebar/promptPick.js";
 import settingsBtn from "./sidebar/settings.js";
-import requestUi from "./sidebar/requestUi.js";
+import requestUi from "./sidebar/requestUi.ts";
 import { versionCheck } from "./sidebar/versionChecker.js";
-import Html from "../../scripts/html.js";
-import { ICONS } from "./sidebar/icons.js";
+import Html from "@datkat21/html";
+import { ICONS } from "./icons.js";
 import { store } from "../_globals.js";
 import { checkRequests, updateRequestsMessage } from "../apiUsage.js";
 import toggleButton from "./sidebar/toggleView.js";
 import customSettings from "./sidebar/customSettings.js";
+import { clearMessageHistory } from "../clearMessageHistory.js";
+import { Prompt } from "../util.ts";
 
 export default async function setupSidebar() {
   // previously called settingsContainer
-  const sideBar = new Html().class("config").appendTo("body");
+  const sideBar = new Html("div").class("config").appendTo("body");
 
   store.set("sideBar", sideBar);
 
-  const selectWrapper = new Html().class("row").appendTo(sideBar);
+  const selectWrapper = new Html("div").class("row").appendTo(sideBar);
 
   const heading = new Html("span")
     .text("Chatify")
     .classOn("extra-hidden", "label")
     .appendTo(selectWrapper);
+  store.set("heading", heading);
   const deleteConvoButton = new Html("button")
     .html(ICONS.trashCan)
     .classOn("center", "danger", "fg-auto")
     .appendTo(selectWrapper)
-    .on("click", (_) => clearMessageHistory());
+    .on("click", () => clearMessageHistory());
 
   store.set("deleteConvoButton", deleteConvoButton);
 
@@ -40,13 +43,13 @@ export default async function setupSidebar() {
 
   const prompts = await getPrompts();
 
-  prompts.forEach((e) => {
+  prompts.forEach((e: Prompt) => {
     select.elm.appendChild(new Option(e.label, e.id));
   });
 
   select.elm.append(new Option("Custom", "custom"));
 
-  const selectWrapperMiddle = new Html().class("fg").appendTo(selectWrapper);
+  const selectWrapperMiddle = new Html("div").class("fg").appendTo(selectWrapper);
 
   // Sidebar menu hide/show button
   toggleButton(selectWrapper);
@@ -67,11 +70,11 @@ export default async function setupSidebar() {
 
   store.set("userName", userName);
 
-  const multiRow = new Html().classOn("row").appendTo(sideBar);
-
+  const multiRow = new Html("div").classOn("row").appendTo(sideBar);
+  store.set("multiRow", multiRow);
   // Add multi row buttons
-  convoButton(multiRow);
-  settingsBtn(multiRow);
+  store.set("convoButton", convoButton(multiRow));
+  store.set("settingsBtn", settingsBtn(multiRow));
 
   requestUi(sideBar);
 

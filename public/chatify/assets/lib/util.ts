@@ -1,6 +1,7 @@
 import { store } from "./_globals.js";
+import hljs from "../scripts/highlight.min.js";
 
-export function parseMarkdown(text) {
+export function parseMarkdown(text: string) {
   let inCodeBlock = false; // flag to track if we're inside a code block
   let parsedText = "";
 
@@ -53,6 +54,7 @@ export function parseMarkdown(text) {
     const lang = codeTags[i].match(/class="language-([^"]+)"/i);
     const language = lang ? lang[1] : "plaintext";
     try {
+      //@ts-ignore highlight.js doesn't export correctly
       const highlightedCode = hljs.highlight(code, { language }).value;
       parsedText = parsedText.replace(
         codeTags[i],
@@ -64,7 +66,7 @@ export function parseMarkdown(text) {
   }
   return parsedText;
 }
-export function parseMarkdownLine(line) {
+export function parseMarkdownLine(line: string) {
   // Headers
   line = line.replace(/^# (.+)/gm, "<h1>$1</h1>");
   line = line.replace(/^## (.+)/gm, "<h2>$1</h2>");
@@ -92,13 +94,13 @@ export function parseMarkdownLine(line) {
   return line;
 }
 
-export function toSnakeCase(name) {
+export function toSnakeCase(name: string) {
   return name.trim().toLowerCase().replace(/\s+/g, "-");
 }
 
-export function futureDate(fd) {
+export function futureDate(fd: Date) {
   const now = new Date();
-  const diff = fd - now;
+  const diff = fd.getTime() - now.getTime();
 
   let timeString = "";
   if (diff <= 0) {
@@ -126,4 +128,27 @@ export function futureDate(fd) {
 export function scrollDown() {
   var chatWindow = store.get("messagesContainer").elm;
   chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+export enum PromptPickType {
+  Default,
+  SingleAssistant,
+}
+
+export enum PromptType {
+  BuiltIn = "builtIn",
+  Community = "community",
+  Saved = "saved",
+}
+
+export interface Prompt {
+  label?: string;
+  id?: string;
+  greeting?: string;
+  hint?: string;
+  type?: PromptType;
+  avatar?: string;
+  displayName?: string;
+  prompt?: string;
+  greetingMessages?: string[];
 }

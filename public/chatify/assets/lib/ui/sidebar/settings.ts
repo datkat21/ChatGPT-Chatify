@@ -1,8 +1,26 @@
-import Html from "../../../scripts/html.js";
+import Html from "@datkat21/html";
 import { store } from "../../_globals.js";
 import Modal from "../../modal.js";
 
-let userSettings = {
+export interface UserSettings {
+  promptPrefix: string | false;
+  promptPrefixEnabled: boolean;
+  timeZone: string | false;
+  theme: string;
+  username: string;
+  includeUsername: boolean;
+  rememberContext: boolean;
+  chatViewType: string;
+  showAvatars: boolean;
+  showNames: boolean;
+  showCopyButton: boolean;
+  showEditButton: boolean;
+  testMode: boolean;
+  ctxLength: string;
+  maxTokens: string;
+}
+
+let userSettings: UserSettings = {
   promptPrefix: "", // string | false, if 0 char is false
   promptPrefixEnabled: true,
   timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || false,
@@ -22,8 +40,8 @@ let userSettings = {
 
 store.set("userSettings", userSettings);
 
-function loadUserSettings(
-  us = JSON.parse(localStorage.getItem("user-settings"))
+export function loadUserSettings(
+  us = JSON.parse(localStorage.getItem("user-settings") || "{}")
 ) {
   try {
     const userSettings = store.get("userSettings");
@@ -72,7 +90,7 @@ function saveUserSettings() {
   localStorage.setItem("user-settings", JSON.stringify(userSettings));
 }
 
-export default function settingsBtn(container) {
+export default function settingsBtn(container: Html) {
   return new Html("button")
     .text("Settings")
     .class("fg")
@@ -87,36 +105,36 @@ export default function settingsBtn(container) {
         .class("fg-auto")
         .text("Export Settings");
 
-      importSettingsBtn.on("click", (e) => {
-        let modal1;
-        const modalContainer = new Html()
+      importSettingsBtn.on("click", () => {
+        let modal1: Modal;
+        const modalContainer = new Html("div")
           .text(
             "Are you sure you want to continue importing new settings?\nYou will lose ALL your prompts and saved settings."
           )
           .append(
-            new Html()
+            new Html("div")
               .classOn("fg-auto", "row")
               .append(
                 new Html("button")
                   .text("OK")
                   .classOn("danger", "fg-auto")
-                  .on("click", (e) => {
+                  .on("click", () => {
                     modal1.hide();
 
                     const ta = new Html("textarea").attr({
-                      rows: 8,
+                      rows: "8",
                       placeholder: "{ ... }",
                     });
 
                     const modalContent = new Html("div")
                       .text("Import JSON configuration data:")
                       .append(
-                        new Html().classOn("column").appendMany(
+                        new Html("div").classOn("column").appendMany(
                           ta,
                           new Html("button")
                             .text("Attempt Import")
                             .classOn("fg-auto")
-                            .on("click", (e) => {
+                            .on("click", () => {
                               let json;
                               try {
                                 json = JSON.parse(ta.getValue());
@@ -132,7 +150,7 @@ export default function settingsBtn(container) {
 
                                 // another lazy
                                 modal.hide();
-                                userSettingsBtn.elm.click();
+                                store.get("userSettingsBtn").elm.click();
                                 saveUserSettings();
                               } catch (e) {
                                 modal2.hide();
@@ -150,7 +168,7 @@ export default function settingsBtn(container) {
                 new Html("button")
                   .text("Cancel")
                   .classOn("fg-auto")
-                  .on("click", (e) => {
+                  .on("click", () => {
                     modal1.hide();
                   })
               )
@@ -160,9 +178,9 @@ export default function settingsBtn(container) {
         modal1.show();
       });
 
-      exportSettingsBtn.on("click", (e) => {
+      exportSettingsBtn.on("click", () => {
         const ta = new Html("textarea").attr({
-          rows: 8,
+          rows: "8",
           placeholder: "{ ... }",
         });
 
@@ -171,21 +189,26 @@ export default function settingsBtn(container) {
         try {
           ta.val(
             JSON.stringify(
-              Object.assign(JSON.parse(localStorage.getItem("user-settings")), {
-                promptList: JSON.parse(localStorage.getItem("prompts")),
-              })
+              Object.assign(
+                JSON.parse(localStorage.getItem("user-settings") || "{}"),
+                {
+                  promptList: JSON.parse(
+                    localStorage.getItem("prompts") || "{}"
+                  ),
+                }
+              )
             )
           );
 
           modalContent = new Html("div")
             .text("Here's your exported configuration data:")
             .append(
-              new Html().classOn("column").appendMany(
+              new Html("div").classOn("column").appendMany(
                 ta,
                 new Html("button")
                   .text("OK")
                   .classOn("fg-auto")
-                  .on("click", (e) => {
+                  .on("click", () => {
                     modal2.hide();
                   })
               )
@@ -194,11 +217,11 @@ export default function settingsBtn(container) {
           modalContent = new Html("div")
             .text("Unable to export configuration due to parsing error:\n" + e)
             .append(
-              new Html().classOn("column").appendMany(
+              new Html("div").classOn("column").appendMany(
                 new Html("button")
                   .text("OK")
                   .classOn("fg-auto")
-                  .on("click", (e) => {
+                  .on("click", () => {
                     modal2.hide();
                   })
               )
@@ -219,24 +242,26 @@ export default function settingsBtn(container) {
           maxlength: "24",
           minlength: "1",
         })
-        .on("input", (e) => {
-          localStorage.setItem("remembered-name", usernameInput.elm.value);
-          const result = /^[a-zA-Z0-9-]{0,24}$/.test(usernameInput.elm.value);
+        .on("input", (e: Event) => {
+          localStorage.setItem("remembered-name", usernameInput.getValue());
+          const result = /^[a-zA-Z0-9-]{0,24}$/.test(usernameInput.getValue());
           store.set(
             "userName",
-            result === true ? usernameInput.elm.value : "user"
+            result === true ? usernameInput.getValue() : "user"
           );
-          userSettings.username = store.get('userName');
+          userSettings.username = store.get("userName");
           saveUserSettings();
-          if (result === false) return (e.target.value = "User");
+          if (result === false)
+            return ((e.target as HTMLInputElement).value = "User");
         });
 
-      usernameInput.elm.value =
-        localStorage.getItem("remembered-name") ?? "User";
+      store.set("usernameInput", usernameInput);
+
+      usernameInput.val(localStorage.getItem("remembered-name") ?? "User");
       store.set(
         "userName",
-        /^[a-zA-Z0-9-]{0,24}$/.test(usernameInput.elm.value)
-          ? usernameInput.elm.value
+        /^[a-zA-Z0-9-]{0,24}$/.test(usernameInput.getValue())
+          ? usernameInput.getValue()
           : "user"
       );
 
@@ -253,8 +278,8 @@ export default function settingsBtn(container) {
           type: "checkbox",
           checked: userSettings.includeUsername === true ? true : undefined,
         })
-        .on("input", (e) => {
-          userSettings.includeUsername = e.target.checked;
+        .on("input", (e: Event) => {
+          userSettings.includeUsername = (e.target as HTMLInputElement).checked;
           saveUserSettings();
         })
         .appendTo(settings_enableUserNameWrapper);
@@ -275,8 +300,8 @@ export default function settingsBtn(container) {
           type: "checkbox",
           checked: userSettings.rememberContext === true ? true : undefined,
         })
-        .on("input", (e) => {
-          userSettings.rememberContext = e.target.checked;
+        .on("input", (e: Event) => {
+          userSettings.rememberContext = (e.target as HTMLInputElement).checked;
           saveUserSettings();
         })
         .appendTo(settings_rememberContextWrapper);
@@ -302,9 +327,11 @@ export default function settingsBtn(container) {
           type: "checkbox",
           checked: userSettings.showAvatars === true ? true : undefined,
         })
-        .on("input", (e) => {
-          document.documentElement.dataset.showAvatars = e.target.checked;
-          userSettings.showAvatars = e.target.checked;
+        .on("input", (e: Event) => {
+          document.documentElement.dataset.showAvatars = String(
+            (e.target as HTMLInputElement).checked
+          );
+          userSettings.showAvatars = (e.target as HTMLInputElement).checked;
           saveUserSettings();
         })
         .appendTo(settings_showAvatarsWrapper);
@@ -325,9 +352,11 @@ export default function settingsBtn(container) {
           type: "checkbox",
           checked: userSettings.showNames === true ? true : undefined,
         })
-        .on("input", (e) => {
-          document.documentElement.dataset.showNames = e.target.checked;
-          userSettings.showNames = e.target.checked;
+        .on("input", (e: Event) => {
+          document.documentElement.dataset.showNames = String(
+            (e.target as HTMLInputElement).checked
+          );
+          userSettings.showNames = (e.target as HTMLInputElement).checked;
           saveUserSettings();
         })
         .appendTo(settings_showNamesWrapper);
@@ -348,9 +377,11 @@ export default function settingsBtn(container) {
           type: "checkbox",
           checked: userSettings.showCopyButton === true ? true : undefined,
         })
-        .on("input", (e) => {
-          document.documentElement.dataset.showCopyButton = e.target.checked;
-          userSettings.showCopyButton = e.target.checked;
+        .on("input", (e: Event) => {
+          document.documentElement.dataset.showCopyButton = String(
+            (e.target as HTMLInputElement).checked
+          );
+          userSettings.showCopyButton = (e.target as HTMLInputElement).checked;
           saveUserSettings();
         })
         .appendTo(settings_showCopyBtnWrapper);
@@ -371,9 +402,11 @@ export default function settingsBtn(container) {
           type: "checkbox",
           checked: userSettings.showEditButton === true ? true : undefined,
         })
-        .on("input", (e) => {
-          document.documentElement.dataset.showEditButton = e.target.checked;
-          userSettings.showEditButton = e.target.checked;
+        .on("input", (e: Event) => {
+          document.documentElement.dataset.showEditButton = String(
+            (e.target as HTMLInputElement).checked
+          );
+          userSettings.showEditButton = (e.target as HTMLInputElement).checked;
           saveUserSettings();
         })
         .appendTo(settings_showEditButtonWrapper);
@@ -397,8 +430,8 @@ export default function settingsBtn(container) {
           type: "checkbox",
           checked: userSettings.testMode === true ? true : undefined,
         })
-        .on("input", (e) => {
-          userSettings.testMode = e.target.checked;
+        .on("input", (e: Event) => {
+          userSettings.testMode = (e.target as HTMLInputElement).checked;
           saveUserSettings();
         })
         .appendTo(settings_testModeWrapper);
@@ -456,9 +489,11 @@ export default function settingsBtn(container) {
             selected: userSettings.theme === "violet" ? true : undefined,
           })
         )
-        .on("input", (e) => {
-          document.documentElement.dataset.theme = e.target.value;
-          userSettings.theme = e.target.value;
+        .on("input", (e: Event) => {
+          document.documentElement.dataset.theme = String(
+            (e.target as HTMLInputElement).value
+          );
+          userSettings.theme = (e.target as HTMLInputElement).value;
           saveUserSettings();
         });
       const chatSelect = new Html("select")
@@ -483,9 +518,11 @@ export default function settingsBtn(container) {
               userSettings.chatViewType === "flat-bubbles" ? true : undefined,
           })
         )
-        .on("input", (e) => {
-          document.documentElement.dataset.chatViewType = e.target.value;
-          userSettings.chatViewType = e.target.value;
+        .on("input", (e: Event) => {
+          document.documentElement.dataset.chatViewType = (
+            e.target as HTMLInputElement
+          ).value;
+          userSettings.chatViewType = (e.target as HTMLInputElement).value;
           saveUserSettings();
         });
 
@@ -494,10 +531,12 @@ export default function settingsBtn(container) {
         .classOn("row");
 
       function togglePpReadonly() {
-        if (!settings_togglePromptPrefixCheckbox.elm.checked) {
-          promptPrefixBox.elm.disabled = true;
+        if (
+          !(settings_togglePromptPrefixCheckbox.elm as HTMLInputElement).checked
+        ) {
+          (promptPrefixBox.elm as HTMLInputElement).disabled = true;
         } else {
-          promptPrefixBox.elm.disabled = false;
+          (promptPrefixBox.elm as HTMLInputElement).disabled = false;
         }
       }
 
@@ -505,10 +544,12 @@ export default function settingsBtn(container) {
         .attr({
           id: "epp",
           type: "checkbox",
-          checked: userSettings.promptPrefixEnabled === true ? true : undefined,
+          checked: userSettings.promptPrefixEnabled === true ? true : "",
         })
-        .on("input", (e) => {
-          userSettings.promptPrefixEnabled = e.target.checked;
+        .on("input", (e: Event) => {
+          userSettings.promptPrefixEnabled = (
+            e.target as HTMLInputElement
+          ).checked;
           togglePpReadonly();
           saveUserSettings();
         })
@@ -521,13 +562,15 @@ export default function settingsBtn(container) {
         .appendTo(settings_togglePromptPrefixWrapper);
 
       const promptPrefixBox = new Html("textarea")
-        .attr({ rows: 4, placeholder: "<none>", resize: "none" })
+        .attr({ rows: "4", placeholder: "<none>", resize: "none" })
         .html(
           userSettings.promptPrefix !== false ? userSettings.promptPrefix : ""
         )
-        .on("input", (e) => {
+        .on("input", (e: Event) => {
           userSettings.promptPrefix =
-            e.target.value.length > 0 ? e.target.value : false;
+            (e.target as HTMLInputElement).value.length > 0
+              ? (e.target as HTMLInputElement).value
+              : false;
           saveUserSettings();
         });
 
@@ -580,8 +623,8 @@ export default function settingsBtn(container) {
             selected: userSettings.ctxLength === "3072" ? true : undefined,
           })
         )
-        .on("input", (e) => {
-          userSettings.ctxLength = e.target.value;
+        .on("input", (e: Event) => {
+          userSettings.ctxLength = (e.target as HTMLInputElement).value;
           saveUserSettings();
         });
 
@@ -620,8 +663,8 @@ export default function settingsBtn(container) {
             selected: userSettings.maxTokens === "2048" ? true : undefined,
           })
         )
-        .on("input", (e) => {
-          userSettings.maxTokens = e.target.value;
+        .on("input", (e: Event) => {
+          userSettings.maxTokens = (e.target as HTMLInputElement).value;
           saveUserSettings();
         });
 
@@ -631,35 +674,66 @@ export default function settingsBtn(container) {
           manageSettingsDiv,
           new Html("fieldset").appendMany(
             new Html("legend").text("Personalization"),
-            new Html("span").classOn("pb-2", "flex").text("Username"),
+            new Html("span").classOn("pb-2", "flex", "title").text("Username"),
             usernameInput,
             settings_extraContentWrapper
           ),
           new Html("fieldset").appendMany(
             new Html("legend").text("Appearance"),
-            new Html("span").classOn("pb-2", "flex").text("Theme"),
+            new Html("span").classOn("pb-2", "flex", "title").text("Theme"),
             themeSelect,
-            new Html("span").classOn("pb-2", "pt-2", "flex").text("Chat Style"),
+            new Html("span")
+              .classOn("pb-2", "pt-2", "flex", "title")
+              .text("Chat Style"),
             chatSelect,
+            new Html("span")
+              .classOn("pt-2", "flex", "title")
+              .text("Optional Appearance Features"),
             settings_AppearanceContentWrapper
           ),
           new Html("fieldset").appendMany(
             new Html("legend").text("Chatbot Settings"),
             settings_togglePromptPrefixWrapper,
-            new Html("span").classOn("pb-2", "flex").text("Prompt prefix"),
+            new Html("span")
+              .classOn("pb-2", "flex", "title")
+              .text("Prompt prefix"),
             promptPrefixBox,
             new Html("span")
-              .classOn("pt-2", "pb-2", "flex")
+              .classOn("pt-2", "pb-2", "flex", "title")
               .text("Context Length (in tokens)"),
             ctxLength,
             new Html("span")
-              .classOn("pt-2", "pb-2", "flex")
+              .classOn("pt-2", "pb-2", "flex", "title")
               .text("Max Tokens (to generate)"),
             maxTokens,
-            new Html("span").classOn("pt-2", "flex").text("Test Mode"),
+            new Html("span").classOn("pt-2", "flex", "title").text("Test Mode"),
             settings_ChatbotSettingsContentWrapper
           )
         );
+
+      store.set("settings_enableUserName", settings_enableUserName);
+      store.set(
+        "settings_rememberContextCheckbox",
+        settings_rememberContextCheckbox
+      );
+      store.set("themeSelect", themeSelect);
+      store.set("settings_showAvatarsCheckbox", settings_showAvatarsCheckbox);
+      store.set("settings_showNamesCheckbox", settings_showNamesCheckbox);
+      store.set("settings_showCopyBtnCheckbox", settings_showCopyBtnCheckbox);
+      store.set(
+        "settings_showEditButtonCheckbox",
+        settings_showEditButtonCheckbox
+      );
+      store.set("chatSelect", chatSelect);
+      store.set(
+        "settings_togglePromptPrefixCheckbox",
+        settings_togglePromptPrefixCheckbox
+      );
+      store.set("togglePpReadonly", togglePpReadonly);
+      store.set("promptPrefixBox", promptPrefixBox);
+      store.set("ctxLength", ctxLength);
+      store.set("maxTokens", maxTokens);
+      store.set("settings_testModeCheckbox", settings_testModeCheckbox);
 
       // Show the settings modal
       const modal = new Modal(modalContent);

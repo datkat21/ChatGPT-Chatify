@@ -1,9 +1,9 @@
-import Html from "../../scripts/html.js";
+import Html from "@datkat21/html";
 import { store } from "../_globals.js";
-import { ICONS } from "./sidebar/icons.js";
+import { ICONS } from "./icons.js";
 import { startTextGeneration } from "./state.js";
 
-export function autoExpandTextArea(e) {
+export function autoExpandTextArea() {
   const inputArea = store.get("inputArea");
 
   inputArea.elm.style.height = "auto";
@@ -16,20 +16,20 @@ export function autoExpandTextArea(e) {
 }
 
 export function setupMessages() {
-  const messagesWrapper = new Html().class("messages-wrapper").style({
+  const messagesWrapper = new Html("div").class("messages-wrapper").style({
     display: "flex",
     flexDirection: "row",
     gap: "8px",
     alignItems: "flex-end",
   });
 
-  const messagesContainer = new Html()
+  const messagesContainer = new Html("div")
     .class("messages")
     .appendTo(messagesWrapper);
 
   store.set("messagesContainer", messagesContainer);
 
-  const inputAreaWrapper = new Html()
+  const inputAreaWrapper = new Html("div")
     .classOn("row", "py-0", "align-end")
     .appendTo(messagesWrapper);
 
@@ -60,7 +60,7 @@ export function setupMessages() {
   const isMobile = /Mobi/.test(navigator.userAgent);
 
   if (!isMobile) {
-    inputArea.elm.addEventListener("keydown", (e) => {
+    inputArea.elm.addEventListener("keydown", (e: any) => {
       if ((e.code || e.key) === "Enter" && !e.shiftKey) {
         e.preventDefault();
         if (e.target.value) {
